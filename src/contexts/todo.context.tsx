@@ -11,6 +11,7 @@ const useTodoContext = () => {
     const [inActiveTodos, setInActiveTodos] = useState<UpdateAndDeleteTodoType>({})
     const [updatedTodo, setUpdatedTodo] = useState("")
     const [deletedTodo, setDeletedTodo] = useState("")
+    const [completedTodo, setCompletedTodo] = useState<UpdateAndDeleteTodoType>({})
     const service = useMemo(() => new API("todo"), []);
 
     const fetchTodos = useMemo(async () => {
@@ -52,14 +53,36 @@ const useTodoContext = () => {
         }
     }
 
+    const completeTodo = async(id: string, completed: boolean) => {
+        try {
+            const updatedTodo: TodoType = await service.updateOrDelete("PATCH", id, {
+                completed,
+            })
+            setCompletedTodo(updatedTodo)
+        } catch(err) {
+            console.log("Error occured", err)
+        }
+    }
+
     useEffect(() => {
         if(updatedTodo !== "") {
             delete editedTodos[updatedTodo];
+            setUpdatedTodo("")
             setEditedTodos({...editedTodos})
         }
       
     }, [updatedTodo, editedTodos, setEditedTodos])
 
+    useEffect(() => {
+        if(completedTodo.hasOwnProperty("id")) {
+            const foundTodo = todos.find(todo => todo.id === completedTodo.id)
+            if(foundTodo) {
+                foundTodo.completed = completedTodo.completed;
+                setCompletedTodo({})
+                setTodos([...todos])
+            }
+        }
+    }, [completedTodo, setCompletedTodo, todos])
 
     useEffect(() => {
         if(deletedTodo !== "") {
@@ -67,13 +90,13 @@ const useTodoContext = () => {
             if(foundTodoIndex > -1) {
                 todos.splice(foundTodoIndex, 1)
                 delete deletedTodos[deletedTodo];
-                console.log(todos)
+                setDeletedTodo("")
                 setTodos([...todos])
                 setDeletedTodos({...deletedTodos})
             }
         }
       
-    }, [todos, setTodos, setDeletedTodos, deletedTodo, deletedTodos])
+    }, [todos, setTodos, setDeletedTodos, setDeletedTodo, deletedTodo, deletedTodos])
 
     const addTodo = async (todo: AddTodoType) => {
         try {
@@ -94,7 +117,8 @@ const useTodoContext = () => {
         addTodo,
         editedTodos,
         deletedTodos,
-        setEditedTodos
+        setEditedTodos,
+        completeTodo
     }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TodoType } from '../../types';
-import { Button, Form, Spinner } from 'react-bootstrap';
+import { Button, Form, Spinner, Col, Row } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
 
 interface ShowTodoPropsTypes {
@@ -8,8 +8,8 @@ interface ShowTodoPropsTypes {
     loading: boolean;
 }
 
-const ShowTodo = ({todo: {title, id}, loading}: ShowTodoPropsTypes) => {
-    const { editTodo, deleteTodo } = TodoContext.useContainer()
+const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) => {
+    const { editTodo, deleteTodo, completeTodo } = TodoContext.useContainer()
     const [isShown, setIsShown] = useState(false);
     const className = "todo-item";
     const [inputValue, setInputValue] = useState(title)
@@ -20,7 +20,7 @@ const ShowTodo = ({todo: {title, id}, loading}: ShowTodoPropsTypes) => {
         setEditBtnClicked(!editBtnClicked)
     }
 
-    const onClearBtnClicked = () => {
+    const onCancelBtnClicked = () => {
         setInputValue(title)
         toggleEditBtn()
     }
@@ -36,12 +36,22 @@ const ShowTodo = ({todo: {title, id}, loading}: ShowTodoPropsTypes) => {
         editTodo(id, inputValue)
     }
 
+    const onTodoRadioBtnClicked = (e: any) => {
+        completeTodo(id, !completed)
+    }
+
     const renderEditTodo = () => <tr>
         <td className="py-4">
             <Form onSubmit={onSubmitForm}>
-                <Form.Control value={inputValue} onChange={onInputChange} className="mb-2" type="text" />
-                <Button type="submit">Save</Button>
-                <Button onClick={onClearBtnClicked}>Cancel</Button>
+                <Row>
+                    <Col sm={6}>
+                        <Form.Control value={inputValue} onChange={onInputChange} className="mb-2" type="text" />
+                    </Col>
+                    <Col sm={6}>
+                        <Button size="sm" type="submit">Save</Button>
+                        <Button size="sm" onClick={onCancelBtnClicked}>Cancel</Button>
+                    </Col>
+                </Row>
             </Form>
         </td>
 
@@ -59,19 +69,29 @@ const ShowTodo = ({todo: {title, id}, loading}: ShowTodoPropsTypes) => {
             onMouseLeave={() => setIsShown(false)}
             className={loading ? `text-muted ${className}` : className}
         >
-        <td className="py-4">{finalTitle}</td>
+        <td className="py-4"> 
+            <Form.Check 
+                checked={completed}
+                onClick={onTodoRadioBtnClicked}
+                inline
+                label={
+                    !completed 
+                    ? finalTitle 
+                    : <del className="text-muted">{finalTitle}</del>
+                }
+                type={"radio"} 
+            /></td>
             <td>{isShown ?
                 (
                     !loading ?
                     <>
-                        <Button onClick={toggleEditBtn} size="sm">Edit</Button>
+                        {!completed && <Button onClick={toggleEditBtn} size="sm">Edit</Button>}
                         <Button size="sm" variant="danger" onClick={onDeleteBtnClicked}>Delete</Button>
                     </>
                     : <Spinner animation="grow" size="sm" />
                 )
                 : null}</td>
         </tr>
-
     return (
         <>
             {!editBtnClicked ? renderShowTodo() : renderEditTodo()}

@@ -2,7 +2,7 @@ import React from 'react';
 import './App.scss';
 import ListTodo from '../Todo/list.todo';
 import TodoContext from '../../contexts/todo.context'
-import { Navbar } from 'react-bootstrap';
+import { Navbar, Row, Col } from 'react-bootstrap';
 function App() {
   return (
     <>
@@ -13,7 +13,11 @@ function App() {
       </Navbar>
       <div className="container mt-4">
         <TodoContext.Provider>
-          <ListTodo />
+          <Row>
+            <Col xs={12}>
+              <ListTodo />
+            </Col>
+          </Row>
         </TodoContext.Provider>
     </div>
     </>
