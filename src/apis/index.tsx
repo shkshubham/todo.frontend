@@ -7,13 +7,17 @@ export default class {
         this.service = `${REACT_APP_API_URL}/${service}`;
     }
     
+    async checkAndGetResponse(response: Response) {
+        if (response.ok) {
+            return await response.json();
+        }
+        return response;
+    }
+
     async get() {
         try {
             const response = await fetch(this.service);
-            if (response.ok) {
-                return await response.json();
-            }
-            return response;
+            return this.checkAndGetResponse(response)
         } catch(err) {
             throw new Error(err);
         }
@@ -28,10 +32,7 @@ export default class {
                 },
                 body: JSON.stringify(data)
               });
-            if (response.ok) {
-                return await response.json();
-            }
-            return response;
+            return this.checkAndGetResponse(response)
         } catch(err) {
             throw new Error(err);
         }
@@ -46,10 +47,7 @@ export default class {
                 },
                 body: JSON.stringify(data)
               });
-            if (response.ok) {
-                return await response.json();
-            }
-            return response;
+            return this.checkAndGetResponse(response)
         } catch(err) {
             throw new Error(err);
         }

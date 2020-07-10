@@ -49,7 +49,7 @@ const ShowTodo = ({todo: {title, id}, loading}: ShowTodoPropsTypes) => {
 
     const onDeleteBtnClicked = () => {
         const response = window.confirm("Are you sure, You want to delete this todo?");
-        if (response == true) {
+        if (response === true) {
             deleteTodo(id)
         }
     }

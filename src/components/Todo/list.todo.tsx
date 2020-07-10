@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TodoContext from '../../contexts/todo.context';
 import { Form, Table } from 'react-bootstrap';
-import { TodoType, AddTodoType } from '../../types';
 import ShowTodo from './show.todo';
 import './todo.scss';
 

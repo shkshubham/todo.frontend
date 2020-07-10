@@ -20,7 +20,7 @@ const useTodoContext = () => {
             return null;
         }
 
-    }, [setTodos, service])
+    }, [service])
 
     useEffect(() => {
         fetchTodos.then(({data}) => {
@@ -28,35 +28,28 @@ const useTodoContext = () => {
                 setTodos(data)
             }
         })
-    }, [setTodos])
+    }, [todos, fetchTodos, setTodos])
     
     const deleteTodo = async(id: string) => {
         setDeletedTodos({...deletedTodos, [id]: true});
-        console.log("iiii", id)
-        setTimeout(async() => {
         try {
             const deletedTodo = await service.updateOrDelete("DELETE", id);
             setDeletedTodo(deletedTodo.id)
         } catch(err) {
             console.log("Error occured", err)
         }
-        }, 2000)
     }
 
     const editTodo = async (id: string, title: string) => {
-        const value = {id, title, updated: false}
         setEditedTodos({...editedTodos, [id]: true});
-        setTimeout(async() => {
         try {
             const updatedTodo: TodoType = await service.updateOrDelete("PATCH", id, {
                 title,
             })
             setUpdatedTodo(updatedTodo.id)
-
         } catch(err) {
             console.log("Error occured", err)
         }
-        }, 10000)
     }
 
     useEffect(() => {
@@ -65,14 +58,12 @@ const useTodoContext = () => {
             setEditedTodos({...editedTodos})
         }
       
-    }, [updatedTodo])
+    }, [updatedTodo, editedTodos, setEditedTodos])
 
 
     useEffect(() => {
         if(deletedTodo !== "") {
-            console.log(deletedTodo, "0000000")
             const foundTodoIndex = todos.findIndex(({id}) => id === deletedTodo)
-            console.log(foundTodoIndex)
             if(foundTodoIndex > -1) {
                 todos.splice(foundTodoIndex, 1)
                 delete deletedTodos[deletedTodo];
@@ -82,11 +73,11 @@ const useTodoContext = () => {
             }
         }
       
-    }, [deletedTodo])
+    }, [todos, setTodos, setDeletedTodos, deletedTodo, deletedTodos])
 
     const addTodo = async (todo: AddTodoType) => {
         try {
-            const createdTodo = await service.post(todo);
+           await service.post(todo);
         } catch(err) {
             console.log("Error occured", err)
         }
