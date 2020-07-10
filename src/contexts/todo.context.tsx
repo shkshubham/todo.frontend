@@ -8,10 +8,13 @@ const useTodoContext = () => {
     const [newAddedTodos, setNewAddedTodos] = useState<AddTodoType[]>([]);
     const [editedTodos, setEditedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [deletedTodos, setDeletedTodos] = useState<UpdateAndDeleteTodoType>({})
-    const [inActiveTodos, setInActiveTodos] = useState<UpdateAndDeleteTodoType>({})
+    const [addedTodos, setAddedTodos] = useState<UpdateAndDeleteTodoType>({})
+
     const [updatedTodo, setUpdatedTodo] = useState("")
     const [deletedTodo, setDeletedTodo] = useState("")
     const [completedTodo, setCompletedTodo] = useState<UpdateAndDeleteTodoType>({})
+    const [createdTodo, setCreatedTodo] = useState<any>({})
+
     const service = useMemo(() => new API("todo"), []);
 
     const fetchTodos = useMemo(async () => {
@@ -65,6 +68,23 @@ const useTodoContext = () => {
     }
 
     useEffect(() => {
+        if(createdTodo.hasOwnProperty("id")) {
+            const foundTodo = todos.find(({id}) => id === createdTodo.id)
+            if(!foundTodo) {
+                const foundIndex = newAddedTodos.findIndex(({title}) => title === createdTodo.title)
+                if(foundIndex > -1) {
+                    newAddedTodos.splice(foundIndex, 1)
+                    delete addedTodos[createdTodo.title]
+                    setCreatedTodo({})
+                    setNewAddedTodos([...newAddedTodos])
+                    setAddedTodos({...addedTodos})
+                    setTodos([...todos, createdTodo])
+                }
+            }
+        }
+    }, [createdTodo, setCreatedTodo, addedTodos, setAddedTodos, setNewAddedTodos, newAddedTodos])
+
+    useEffect(() => {
         if(updatedTodo !== "") {
             delete editedTodos[updatedTodo];
             setUpdatedTodo("")
@@ -99,24 +119,26 @@ const useTodoContext = () => {
     }, [todos, setTodos, setDeletedTodos, setDeletedTodo, deletedTodo, deletedTodos])
 
     const addTodo = async (todo: AddTodoType) => {
+        setAddedTodos({...addedTodos, [todo.title]: todo});
+        setNewAddedTodos([...newAddedTodos, {title: todo.title, completed: false}])
         try {
-           await service.post(todo);
-        } catch(err) {
-            console.log("Error occured", err)
-        }
+            const createdTodo = await service.post(todo);
+            setCreatedTodo(createdTodo)
+            } catch(err) {
+                console.log("Error occured", err)
+            }
     }
 
     return { 
         todos,
-        inActiveTodos,
-        setInActiveTodos,
-        deleteTodo,
+        addedTodos,
         newAddedTodos,
+        editedTodos,
+        deletedTodos,
+        deleteTodo,
         setNewAddedTodos,
         editTodo,
         addTodo,
-        editedTodos,
-        deletedTodos,
         setEditedTodos,
         completeTodo
     }

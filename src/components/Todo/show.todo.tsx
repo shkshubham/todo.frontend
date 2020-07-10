@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TodoType } from '../../types';
-import { Button, Form, Spinner, Col, Row } from 'react-bootstrap';
+import { Button, Form, Spinner, Col, Row, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
 
 interface ShowTodoPropsTypes {
@@ -64,12 +64,25 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
         }
     }
 
+    const renderTooltip = (props: any) => {
+        return (
+          <Tooltip id="radio-tooltip" {...props}>
+            Mark as completed
+          </Tooltip>
+        );
+      }
     const renderShowTodo = () => <tr 
             onMouseEnter={() => setIsShown(true)}
             onMouseLeave={() => setIsShown(false)}
             className={loading ? `text-muted ${className}` : className}
         >
         <td className="py-4"> 
+            <OverlayTrigger
+                key="radio-tooltip"
+                placement="left"
+                delay={{ show: 250, hide: 400 }}
+                overlay={renderTooltip}
+            >
             <Form.Check 
                 checked={completed}
                 onClick={onTodoRadioBtnClicked}
@@ -80,7 +93,9 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
                     : <del className="text-muted">{finalTitle}</del>
                 }
                 type={"radio"} 
-            /></td>
+            />
+  </OverlayTrigger>
+</td>
             <td>{isShown ?
                 (
                     !loading ?

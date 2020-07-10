@@ -4,19 +4,21 @@ import { Form, Table, Nav } from 'react-bootstrap';
 import ShowTodo from './show.todo';
 import './todo.scss';
 import { TodoType } from '../../types';
+import { v4 as uuid4 } from 'uuid';
 
 const ListTodo = () => {
-    const {todos, newAddedTodos, setNewAddedTodos, addTodo, editedTodos, deletedTodos} = TodoContext.useContainer();
+    const {todos, newAddedTodos, addTodo, editedTodos, deletedTodos, addedTodos} = TodoContext.useContainer();
     const [todo, setTodo] = useState("")
     const [displayTodo, setDisplayTodo] = useState<TodoType[]>([])
     const renderTodo = (todoList: any[]) => {
-        return todoList.map((todo, index) => {
+        return todoList.map((todo) => {
             return (
                 <ShowTodo loading={(
                     editedTodos.hasOwnProperty(todo.id) ||
-                    deletedTodos.hasOwnProperty(todo.id)
+                    deletedTodos.hasOwnProperty(todo.id) ||
+                    (addedTodos.hasOwnProperty(todo.title) && !todo.id)
 
-                )} todo={todo} key={`todo_${todo.id}`} />
+                )} todo={todo} key={todo.id ? `todo_${todo.id}`: `inactive_todo_${uuid4()}`} />
             );
         })
     }
@@ -25,11 +27,10 @@ const ListTodo = () => {
         setTodo(e.target.value)
     }
 
-    const onSubmit = (e: React.SyntheticEvent) => {
+    const onSubmitAddTask = (e: React.SyntheticEvent) => {
         e.preventDefault()
         if(todo.length) {
             setTodo("")
-            setNewAddedTodos([...newAddedTodos, {title: todo, completed: false}])
             addTodo({
                 title: todo,
                 completed: false
@@ -66,8 +67,8 @@ const ListTodo = () => {
     return (
         <>
             <div className="sticky-top py-4" id="top-menu">
-                <Form onSubmit={onSubmit}>
-                    <Form.Control type="text" placeholder="Add Todo"value={todo} onChange={handleOnChange} />
+                <Form onSubmit={onSubmitAddTask}>
+                    <Form.Control type="text" placeholder="Add Task"value={todo} onChange={handleOnChange} />
                 </Form>
                 <Nav className="my-4" justify onSelect={onSelectTodoTab} variant="pills" defaultActiveKey="all">
                     <Nav.Item>
