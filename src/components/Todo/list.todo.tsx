@@ -7,16 +7,18 @@ import { TodoType } from '../../types';
 import { v4 as uuid4 } from 'uuid';
 
 const ListTodo = () => {
-    const {todos, newAddedTodos, addTodo, editedTodos, deletedTodos, addedTodos} = TodoContext.useContainer();
+    const {todos, newAddedTodos, addTodo, editedTodos, deletedTodos, addedTodos, completedTodos} = TodoContext.useContainer();
     const [todo, setTodo] = useState("")
     const [displayTodo, setDisplayTodo] = useState<TodoType[]>([])
     const renderTodo = (todoList: any[]) => {
+        console.log(completedTodos)
         return todoList.map((todo) => {
             return (
                 <ShowTodo loading={(
                     editedTodos.hasOwnProperty(todo.id) ||
                     deletedTodos.hasOwnProperty(todo.id) ||
-                    (addedTodos.hasOwnProperty(todo.title) && !todo.id)
+                    (addedTodos.hasOwnProperty(todo.title) && !todo.id) ||
+                    completedTodos.hasOwnProperty(todo.id)
 
                 )} todo={todo} key={todo.id ? `todo_${todo.id}`: `inactive_todo_${uuid4()}`} />
             );

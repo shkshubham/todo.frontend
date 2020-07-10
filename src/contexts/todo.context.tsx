@@ -9,6 +9,8 @@ const useTodoContext = () => {
     const [editedTodos, setEditedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [deletedTodos, setDeletedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [addedTodos, setAddedTodos] = useState<UpdateAndDeleteTodoType>({})
+    const [completedTodos, setCompletedTodos] = useState<UpdateAndDeleteTodoType>({})
+
 
     const [updatedTodo, setUpdatedTodo] = useState("")
     const [deletedTodo, setDeletedTodo] = useState("")
@@ -57,6 +59,7 @@ const useTodoContext = () => {
     }
 
     const completeTodo = async(id: string, completed: boolean) => {
+        setCompletedTodos({...completedTodos, [id]: true})
         try {
             const updatedTodo: TodoType = await service.updateOrDelete("PATCH", id, {
                 completed,
@@ -65,6 +68,7 @@ const useTodoContext = () => {
         } catch(err) {
             console.log("Error occured", err)
         }
+
     }
 
     useEffect(() => {
@@ -98,11 +102,13 @@ const useTodoContext = () => {
             const foundTodo = todos.find(todo => todo.id === completedTodo.id)
             if(foundTodo) {
                 foundTodo.completed = completedTodo.completed;
+                delete completedTodos[completedTodo.id]
                 setCompletedTodo({})
+                setCompletedTodos({...completedTodos})
                 setTodos([...todos])
             }
         }
-    }, [completedTodo, setCompletedTodo, todos])
+    }, [completedTodo, setCompletedTodo, todos, setCompletedTodos, completedTodos])
 
     useEffect(() => {
         if(deletedTodo !== "") {
@@ -140,7 +146,8 @@ const useTodoContext = () => {
         editTodo,
         addTodo,
         setEditedTodos,
-        completeTodo
+        completeTodo,
+        completedTodos
     }
 }
 

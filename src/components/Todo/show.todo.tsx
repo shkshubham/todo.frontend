@@ -37,7 +37,7 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
     }
 
     const onTodoRadioBtnClicked = (e: any) => {
-        completeTodo(id, !completed)
+        !loading && completeTodo(id, !completed)
     }
 
     const renderEditTodo = () => <tr>
@@ -67,7 +67,12 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
     const renderTooltip = (props: any) => {
         return (
           <Tooltip id="radio-tooltip" {...props}>
-            Mark as completed
+              {
+                  !loading ?
+                  `Mark as ${completed ? "uncompleted" : "completed"}`
+                  : "Updating"
+              }
+
           </Tooltip>
         );
       }
@@ -94,8 +99,8 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
                 }
                 type={"radio"} 
             />
-  </OverlayTrigger>
-</td>
+            </OverlayTrigger>
+        </td>
             <td>{isShown ?
                 (
                     !loading ?

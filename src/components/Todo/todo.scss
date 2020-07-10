@@ -4,6 +4,9 @@
 
 .todo-table {
     .todo-item {
+        .form-check {
+            transition: all .5s ease-in-out;
+        }
         cursor: pointer;
     }
 }
