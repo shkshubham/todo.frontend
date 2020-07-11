@@ -14,9 +14,17 @@ export default class {
         return response;
     }
 
-    async get() {
+    async get(query:any = null, skip = 0, limit=10) {
+        let url = `${this.service}?$skip=${skip}&$limit=${limit}`
+
+        if(query) {
+            Object.keys(query).map(key => {
+                url += `&${key}=${query[key]}`
+            })
+        }
+        
         try {
-            const response = await fetch(this.service);
+            const response = await fetch(url);
             return this.checkAndGetResponse(response)
         } catch(err) {
             throw new Error(err);

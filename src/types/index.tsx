@@ -10,3 +10,9 @@ export interface TodoType extends AddTodoType {
 export interface UpdateAndDeleteTodoType extends Object {
     [key: string]: any
 }
+
+export interface PaginationType extends Object {
+    limit: number;
+    skip: number;
+    total: number;
+}

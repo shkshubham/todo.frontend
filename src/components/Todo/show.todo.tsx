@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { TodoType } from '../../types';
-import { Button, Form, Spinner, Col, Row, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Form, Col, Row, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
+import Loader from '../includes/Loader/loader';
 
 interface ShowTodoPropsTypes {
     todo: TodoType;
     loading: boolean;
+    setLastTodoElement: React.Dispatch<React.SetStateAction<HTMLTableRowElement | null>>;
 }
 
-const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) => {
-    const { editTodo, deleteTodo, completeTodo } = TodoContext.useContainer()
+const ShowTodo = ({todo: {title, id, completed}, loading, setLastTodoElement}: ShowTodoPropsTypes) => {
+    const { todos, editTodo, deleteTodo, completeTodo, pagination } = TodoContext.useContainer()
     const [isShown, setIsShown] = useState(false);
     const className = "todo-item";
     const [inputValue, setInputValue] = useState(title)
@@ -54,7 +56,6 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
                 </Row>
             </Form>
         </td>
-
     </tr>
 
     const onDeleteBtnClicked = () => {
@@ -77,6 +78,7 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
         );
       }
     const renderShowTodo = () => <tr 
+            ref={(el) => todos.length && todos[todos.length -1].id === id && todos.length >= pagination.limit && setLastTodoElement(el)}
             onMouseEnter={() => setIsShown(true)}
             onMouseLeave={() => setIsShown(false)}
             className={loading ? `text-muted ${className}` : className}
@@ -108,7 +110,7 @@ const ShowTodo = ({todo: {title, id, completed}, loading}: ShowTodoPropsTypes) =
                         {!completed && <Button onClick={toggleEditBtn} size="sm">Edit</Button>}
                         <Button size="sm" variant="danger" onClick={onDeleteBtnClicked}>Delete</Button>
                     </>
-                    : <Spinner animation="grow" size="sm" />
+                    : <Loader />
                 )
                 : null}</td>
         </tr>

@@ -1,40 +1,37 @@
 import { createContainer } from "unstated-next";
 import { useState, useEffect, useMemo } from "react";
-import { TodoType, UpdateAndDeleteTodoType, AddTodoType } from '../types';
+import { TodoType, UpdateAndDeleteTodoType, AddTodoType, PaginationType } from '../types';
 import API from '../apis';
 
 const useTodoContext = () => {
     const [todos, setTodos] = useState<TodoType[]>([])
+    const [pagination, setPagination] = useState<PaginationType>({limit: 10, total: 0, skip: 0})
     const [newAddedTodos, setNewAddedTodos] = useState<AddTodoType[]>([]);
     const [editedTodos, setEditedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [deletedTodos, setDeletedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [addedTodos, setAddedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [completedTodos, setCompletedTodos] = useState<UpdateAndDeleteTodoType>({})
 
-
     const [updatedTodo, setUpdatedTodo] = useState("")
     const [deletedTodo, setDeletedTodo] = useState("")
     const [completedTodo, setCompletedTodo] = useState<UpdateAndDeleteTodoType>({})
     const [createdTodo, setCreatedTodo] = useState<any>({})
-
+    const [isLoadingTodos, setIsLoadingTodos] = useState({loaded: false, error: false})
     const service = useMemo(() => new API("todo"), []);
 
-    const fetchTodos = useMemo(async () => {
-        try {
-            return await service.get();
-        } catch(err) {
-            return null;
-        }
-
-    }, [service])
-
     useEffect(() => {
-        fetchTodos.then(({data}) => {
-            if(data.length && !todos.length) {
-                setTodos(data)
-            }
-        })
-    }, [todos, fetchTodos, setTodos])
+        if(!isLoadingTodos.loaded && !todos.length) {
+            service.get().then(({data, limit, skip, total}) => {
+                setIsLoadingTodos({loaded: true, error: false})
+                if(data.length) {
+                    setPagination({limit, skip, total})
+                    setTodos(data)
+                }
+            }).catch(err => {
+                setIsLoadingTodos({loaded: true, error: true})
+            })
+        }
+    }, [todos, setTodos, service, setIsLoadingTodos])
     
     const deleteTodo = async(id: string) => {
         setDeletedTodos({...deletedTodos, [id]: true});
@@ -78,24 +75,35 @@ const useTodoContext = () => {
                 const foundIndex = newAddedTodos.findIndex(({title}) => title === createdTodo.title)
                 if(foundIndex > -1) {
                     newAddedTodos.splice(foundIndex, 1)
-                    delete addedTodos[createdTodo.title]
                     setCreatedTodo({})
                     setNewAddedTodos([...newAddedTodos])
-                    setAddedTodos({...addedTodos})
-                    setTodos([...todos, createdTodo])
+
+                    setAddedTodos(previousAddedTodos => {
+                        delete previousAddedTodos[createdTodo.title]
+                        return {...previousAddedTodos}
+                    })
+                    setPagination(previusPagination=> {
+                        return {
+                            ...previusPagination,
+                            total: previusPagination.total + 1
+                        }
+                    })
+                    setTodos((previousTodos) => [...previousTodos, createdTodo])
                 }
             }
         }
-    }, [createdTodo, setCreatedTodo, addedTodos, setAddedTodos, setNewAddedTodos, newAddedTodos])
+    }, [createdTodo, setCreatedTodo, setAddedTodos, setNewAddedTodos, newAddedTodos, todos])
 
     useEffect(() => {
         if(updatedTodo !== "") {
-            delete editedTodos[updatedTodo];
             setUpdatedTodo("")
-            setEditedTodos({...editedTodos})
+            setEditedTodos(previousEditedTodos => {
+                delete previousEditedTodos[updatedTodo];
+                return {...editedTodos}
+            })
         }
       
-    }, [updatedTodo, editedTodos, setEditedTodos])
+    }, [updatedTodo, setEditedTodos])
 
     useEffect(() => {
         if(completedTodo.hasOwnProperty("id")) {
@@ -114,19 +122,32 @@ const useTodoContext = () => {
         if(deletedTodo !== "") {
             const foundTodoIndex = todos.findIndex(({id}) => id === deletedTodo)
             if(foundTodoIndex > -1) {
-                todos.splice(foundTodoIndex, 1)
-                delete deletedTodos[deletedTodo];
                 setDeletedTodo("")
-                setTodos([...todos])
-                setDeletedTodos({...deletedTodos})
+
+                setTodos((previousTodos) => {
+                    previousTodos.splice(foundTodoIndex, 1)
+                   return  [...previousTodos]
+                })
+                
+                setDeletedTodos(previousDeletedTodos => {
+                    delete previousDeletedTodos[deletedTodo];
+                    return {...previousDeletedTodos}   
+                })
+                
+                setPagination(previusPagination=> {
+                    return {
+                        ...previusPagination,
+                        total: previusPagination.total - 1
+                    }
+                })
             }
         }
       
-    }, [todos, setTodos, setDeletedTodos, setDeletedTodo, deletedTodo, deletedTodos])
+    }, [todos, setTodos, setDeletedTodos, setDeletedTodo, deletedTodo, setPagination])
 
     const addTodo = async (todo: AddTodoType) => {
         setAddedTodos({...addedTodos, [todo.title]: todo});
-        setNewAddedTodos([...newAddedTodos, {title: todo.title, completed: false}])
+        setNewAddedTodos(previousNewAddedTodos => [...previousNewAddedTodos, {title: todo.title, completed: false}])
         try {
             const createdTodo = await service.post(todo);
             setCreatedTodo(createdTodo)
@@ -147,7 +168,13 @@ const useTodoContext = () => {
         addTodo,
         setEditedTodos,
         completeTodo,
-        completedTodos
+        completedTodos,
+        pagination,
+        setPagination,
+        service,
+        setTodos,
+        isLoadingTodos,
+        setIsLoadingTodos
     }
 }
 

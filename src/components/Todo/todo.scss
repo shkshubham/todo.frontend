@@ -4,8 +4,13 @@
 
 .todo-table {
     .todo-item {
+        font-size: 2rem;
         .form-check {
             transition: all .5s ease-in-out;
+        }
+        input[type=radio] {
+            width: 25px;
+            height: 25px;
         }
         cursor: pointer;
     }
