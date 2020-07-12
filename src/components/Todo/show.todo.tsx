@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { TodoType, APIStatusType, APIStatusUpdateType, UpdateTodoType } from '../../types';
 import { Button, Form, Col, Row, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
 import Loader from '../includes/Loader/loader';
 
-
 interface ShowTodoPropsTypes {
     todo: TodoType;
     setLastTodoElement: React.Dispatch<React.SetStateAction<HTMLTableRowElement | null>>;
+    loading: boolean;
 }
 
-const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement}: ShowTodoPropsTypes) => {
+const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: ShowTodoPropsTypes) => {
     const initialApiStatus = useMemo(() =>{
         return {
             loading: false,
@@ -18,7 +18,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement}: ShowTodoPr
             done: false
         }
     }, [])
-    const { todos, pagination, service } = TodoContext.useContainer()
+    const { todos, pagination, service, setPagination } = TodoContext.useContainer()
     const [isShown, setIsShown] = useState(false);
     const className = "todo-item";
     const [inputValue, setInputValue] = useState(title)
@@ -135,7 +135,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement}: ShowTodoPr
      *
     */
     const completeTodo = async(id: string, completed: boolean) => {
-        alterTodo(id, {completed}, setCompleteStatus, "DELETE").then((response) => {
+        alterTodo(id, {completed}, setCompleteStatus).then((response) => {
             setIsTodoCompleted(response.completed)
         })
     }
@@ -165,7 +165,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement}: ShowTodoPr
      *
     */
     const checkApiStatus = (type: string) => {
-        return deleteStatus[type] || updateStatus[type] || completeStatus[type];
+        return deleteStatus[type] || updateStatus[type] || completeStatus[type] || (type === "loading" && loading);
     }
 
     /**
@@ -189,7 +189,14 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement}: ShowTodoPr
     const onDeleteBtnClicked = () => {
         const response = window.confirm("Are you sure, You want to delete this todo?");
         if (response === true) {
-            alterTodo(id, {}, setDeleteStatus, "DELETE")
+            alterTodo(id, {}, setDeleteStatus, "DELETE").then(() => {
+                setPagination(previousPagination=> {
+                    return {
+                        ...previousPagination,
+                        total: previousPagination.total - 1
+                    }
+                })
+            })
         }
     }
 
@@ -322,4 +329,4 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement}: ShowTodoPr
     ) : null
 }
 
-export default ShowTodo;
+export default memo(ShowTodo);

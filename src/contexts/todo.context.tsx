@@ -1,7 +1,6 @@
 import { createContainer } from "unstated-next";
 import { useState, useEffect, useMemo } from "react";
-import { v4 as uuid4 } from 'uuid'
-import { TodoType, UpdateAndDeleteTodoType, PaginationType } from '../types';
+import { TodoType, UpdateAndDeleteTodoType, PaginationType, AddTodoType } from '../types';
 import API from '../apis';
 
 const useTodoContext = () => {
@@ -48,26 +47,24 @@ const useTodoContext = () => {
     */
     useEffect(() => {
         if(createdTodo.hasOwnProperty("id")) {
-            const foundTodo = todos.find(({id}) => id === createdTodo.id)
-            if(!foundTodo) {
-                const foundIndex = newAddedTodos.findIndex(({title}) => title === createdTodo.title)
-                if(foundIndex > -1) {
-                    newAddedTodos.splice(foundIndex, 1)
-                    setCreatedTodo({})
-                    setNewAddedTodos([...newAddedTodos])
+            const foundIndex = newAddedTodos.findIndex(({id}) => id === createdTodo.ref)
+            
+            if(foundIndex > -1) {
+                newAddedTodos.splice(foundIndex, 1)
+                setCreatedTodo({})
+                setNewAddedTodos([...newAddedTodos])
 
-                    setAddedTodos(previousAddedTodos => {
-                        delete previousAddedTodos[createdTodo.title]
-                        return {...previousAddedTodos}
-                    })
-                    setPagination(previousPagination=> {
-                        return {
-                            ...previousPagination,
-                            total: previousPagination.total + 1
-                        }
-                    })
-                    setTodos((previousTodos) => [...previousTodos, createdTodo])
-                }
+                setAddedTodos(previousAddedTodos => {
+                    delete previousAddedTodos[createdTodo.title]
+                    return {...previousAddedTodos}
+                })
+                setPagination(previousPagination=> {
+                    return {
+                        ...previousPagination,
+                        total: previousPagination.total + 1
+                    }
+                })
+                setTodos(previousTodos=> [...previousTodos, createdTodo])
             }
         }
     }, [createdTodo, setCreatedTodo, setAddedTodos, setNewAddedTodos, newAddedTodos, todos])
@@ -80,9 +77,15 @@ const useTodoContext = () => {
      * @param todo: New todo data
      * 
     */
-    const addTodo = async (todo: TodoType) => {
-        setAddedTodos({...addedTodos, [todo.title]: todo});
-        setNewAddedTodos(previousNewAddedTodos => [...previousNewAddedTodos, {title: todo.title, completed: false, id: uuid4()}])
+    const addTodo = async (todo: AddTodoType) => {
+        setAddedTodos(previousAddedTodos => {
+            return {...previousAddedTodos, [todo.ref]: todo}
+        });
+        setNewAddedTodos(previousNewAddedTodos => [...previousNewAddedTodos, {
+            title: todo.title,
+            completed: false,
+            id: todo.ref
+        }])
         try {
             const createdTodo = await service.post(todo);
             setCreatedTodo(createdTodo)

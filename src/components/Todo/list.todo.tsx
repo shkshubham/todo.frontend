@@ -3,14 +3,15 @@ import TodoContext from '../../contexts/todo.context';
 import { Form, Table, Nav, Col, Row } from 'react-bootstrap';
 import ShowTodo from './show.todo';
 import './todo.scss';
-import { v4 as uuid4 } from 'uuid';
 import Loader from '../includes/Loader/loader';
 import { TodoType, UpdateTodoType } from '../../types';
+import { v4 as uuidv4 } from 'uuid';
 
 const ListTodo = () => {
     const {
         todos,
         newAddedTodos,
+        addedTodos,
         addTodo,
         service,
         pagination,
@@ -36,7 +37,7 @@ const ListTodo = () => {
      * @param todo: New todo data
      * 
     */
-    const observer =  React.useRef(
+    const observer = React.useRef(
         new IntersectionObserver(
           entries => {
             const first = entries[0];
@@ -49,7 +50,7 @@ const ListTodo = () => {
                     setIsLoadingTodos({loaded: true, error: false})
                     setPagination({limit, skip, total})
                     setTodos((previousTodo) => [...previousTodo, ...data])
-                }).catch(err => {
+                }).catch(() => {
                     setIsLoadingTodos({loaded: true, error: true})
                 })
             }
@@ -122,7 +123,7 @@ const ListTodo = () => {
         if(todo.length) {
             setTodo("")
             addTodo({
-                id: uuid4(),
+                ref: uuidv4(),
                 title: todo,
                 completed: false
             });
@@ -168,7 +169,7 @@ const ListTodo = () => {
             setIsLoadingTodos({loaded: true, error: false})
             setPagination({limit, skip, total})
             setTodos(data)
-        }).catch(err => {
+        }).catch(() => {
             setIsLoadingTodos({loaded: true, error: true})
         })
     }
@@ -186,7 +187,10 @@ const ListTodo = () => {
             return (
                     <ShowTodo 
                         setLastTodoElement={setLastTodoElement}
-                    todo={todo} key={todo.id ? `todo_${todo.id}`: `inactive_todo_${uuid4()}`} />
+                        todo={todo}
+                        key={todo.id} 
+                        loading={addedTodos.hasOwnProperty(todo.id)}
+                    />
             );
         })
     }

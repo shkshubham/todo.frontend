@@ -1,7 +1,14 @@
+export interface AddTodoType extends Object {
+    title: string;
+    completed: boolean;
+    ref: string;
+}
+
 export interface TodoType {
     title: string;
     completed: boolean;
     id: string;
+    [key: string]: any;
 }
 
 export interface UpdateAndDeleteTodoType extends Object {
