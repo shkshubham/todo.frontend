@@ -5,9 +5,20 @@ import ShowTodo from './show.todo';
 import './todo.scss';
 import { v4 as uuid4 } from 'uuid';
 import Loader from '../includes/Loader/loader';
+import { TodoType, UpdateTodoType } from '../../types';
 
 const ListTodo = () => {
-    const {todos, newAddedTodos, addTodo, editedTodos, service, pagination, setTodos, setPagination, deletedTodos, addedTodos, completedTodos, isLoadingTodos: {loaded, error}, setIsLoadingTodos} = TodoContext.useContainer();
+    const {
+        todos,
+        newAddedTodos,
+        addTodo,
+        service,
+        pagination,
+        setTodos,
+        setPagination,
+        isLoadingTodos: {loaded, error},
+        setIsLoadingTodos
+    } = TodoContext.useContainer();
     const [todo, setTodo] = useState("")
     const [currentSelectedNav, setCurrentSelectedNav] = useState("todos")
     const [lastTodoElement, setLastTodoElement] = useState<HTMLTableRowElement | null>(null)
@@ -17,6 +28,14 @@ const ListTodo = () => {
         loading: false
     })
     
+     /**
+     * Observer for pagination
+     *
+     * @description To do server side pagination
+     * 
+     * @param todo: New todo data
+     * 
+    */
     const observer =  React.useRef(
         new IntersectionObserver(
           entries => {
@@ -39,30 +58,32 @@ const ListTodo = () => {
         )
     )
 
+    /**
+     * Use effect Hook
+     *
+     * @description To set todos to local ref
+     * 
+    */
     useEffect(() => {
         localTodosAndPagination.current.todos = todos;
     }, [todos])
 
+    /**
+     * Use effect Hook
+     *
+     * @description To set pagination to local ref
+     * 
+    */
     useEffect(() => {
         localTodosAndPagination.current.pagination = pagination;
     }, [pagination])
 
-    const renderTodo = (todoList: any[], type: string) => {
-        return todoList.map((todo) => {
-            return (
-                    <ShowTodo 
-                        setLastTodoElement={setLastTodoElement}
-                        loading={(
-                        editedTodos.hasOwnProperty(todo.id) ||
-                        deletedTodos.hasOwnProperty(todo.id) ||
-                        (addedTodos.hasOwnProperty(todo.title) && !todo.id) ||
-                        completedTodos.hasOwnProperty(todo.id)
-
-                    )} todo={todo} key={todo.id ? `todo_${todo.id}`: `inactive_todo_${uuid4()}`} />
-            );
-        })
-    }
-
+    /**
+     * Use effect Hook
+     *
+     * @description To observe current element using lastTodoElement
+     * 
+    */
     useEffect(() => {
         const currentElement = lastTodoElement;
         const currentObserver = observer.current;
@@ -70,28 +91,54 @@ const ListTodo = () => {
             currentObserver.observe(currentElement);
         }
         return () => {
-          if (currentElement) {
-            currentObserver.unobserve(currentElement);
-          }
+            if (currentElement) {
+                currentObserver.unobserve(currentElement);
+            }
         };
     }, [lastTodoElement])
 
-    const handleOnChange = (e: any) => {
+    /**
+     * Handle Add Todo Input Field
+     * 
+     * @description To set state on add task input field.
+     *      
+     * @param e: Event.
+     *   
+    */
+    const handleAddTodoInputField = (e: any) => {
         setTodo(e.target.value)
     }
 
-    const onSubmitAddTask = (e: React.SyntheticEvent) => {
+    /**
+     * On Submit Add Todo
+     * 
+     * @description To add todo when user add todo.
+     *      
+     * @param e: Event.
+     *   
+    */
+    const onSubmitAddTodo = (e: React.SyntheticEvent) => {
         e.preventDefault()
         if(todo.length) {
             setTodo("")
             addTodo({
+                id: uuid4(),
                 title: todo,
                 completed: false
             });
         }
     }
 
-    const setQuery = (query: any, category: string) => {
+    /**
+     * Set Query
+     * 
+     * @description To render warning and error message.
+     *      
+     * @param query: Todo get query object.
+     * @param category: (active | completed | todos).
+     *   
+    */
+    const setQuery = (query: UpdateTodoType, category: string) => {
         switch(category) {
             case "active":
                 query.completed = false
@@ -104,6 +151,14 @@ const ListTodo = () => {
         }
     }
 
+    /**
+     * Render Todo
+     *      
+     * @description To render warning and error message.
+     * 
+     * @param todoList: Todo Array which have to display.
+     *   
+    */
     const onSelectTodoTab = (category: string) => {
         setCurrentSelectedNav(category)
         const query = {}
@@ -118,6 +173,32 @@ const ListTodo = () => {
         })
     }
 
+    /**
+     * Render Todo
+     *      
+     * @description To render todo.
+     * 
+     * @param todoList: Todo Array which have to display.
+     *   
+    */
+    const renderTodo = (todoList: TodoType[]) => {
+        return todoList.map((todo) => {
+            return (
+                    <ShowTodo 
+                        setLastTodoElement={setLastTodoElement}
+                    todo={todo} key={todo.id ? `todo_${todo.id}`: `inactive_todo_${uuid4()}`} />
+            );
+        })
+    }
+
+    /**
+     * Render Message
+     * 
+     * @description To render warning and error message.
+     *      
+     * @param msg: message to display to user.
+     *   
+    */
     const renderMessage = (msg: string) => {
         return  <tr className="text-center">
             <td>
@@ -126,11 +207,15 @@ const ListTodo = () => {
         </tr>
     }
 
+    /**
+     * Main Return
+     *      
+    */
     return (
         <>
             <div className="sticky-top py-4" id="top-menu">
-                <Form onSubmit={onSubmitAddTask}>
-                    <Form.Control type="text" placeholder="Add Task"value={todo} onChange={handleOnChange} />
+                <Form onSubmit={onSubmitAddTodo}>
+                    <Form.Control type="text" placeholder="Add Task"value={todo} onChange={handleAddTodoInputField} />
                 </Form>
                 <Row>
                     <Col xs={12}>
@@ -156,14 +241,14 @@ const ListTodo = () => {
                         (loaded || todos.length)
                         ? (todos.length
                             ? <>
-                                {renderTodo(todos, "active")}
-                                {renderTodo(newAddedTodos, "inactive")}
+                                {renderTodo(todos)}
+                                {renderTodo(newAddedTodos)}
                             </>
                             : (!error && renderMessage(`No ${currentSelectedNav} todo found`))
                         ): null
                     }
                         {
-                            !loaded ? <td><Loader /></td> : (error && renderMessage(`Something went wrong`)) 
+                            !loaded ? <tr><td><Loader /></td></tr> : (error && renderMessage(`Something went wrong`)) 
                         }
                 </tbody>
             </Table>

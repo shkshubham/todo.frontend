@@ -18,7 +18,7 @@ export default class {
         let url = `${this.service}?$skip=${skip}&$limit=${limit}`
 
         if(query) {
-            Object.keys(query).map(key => {
+            Object.keys(query).forEach(key => {
                 url += `&${key}=${query[key]}`
             })
         }

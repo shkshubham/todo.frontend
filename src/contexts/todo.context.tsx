@@ -1,24 +1,31 @@
 import { createContainer } from "unstated-next";
 import { useState, useEffect, useMemo } from "react";
-import { TodoType, UpdateAndDeleteTodoType, AddTodoType, PaginationType } from '../types';
+import { v4 as uuid4 } from 'uuid'
+import { TodoType, UpdateAndDeleteTodoType, PaginationType } from '../types';
 import API from '../apis';
 
 const useTodoContext = () => {
     const [todos, setTodos] = useState<TodoType[]>([])
     const [pagination, setPagination] = useState<PaginationType>({limit: 10, total: 0, skip: 0})
-    const [newAddedTodos, setNewAddedTodos] = useState<AddTodoType[]>([]);
-    const [editedTodos, setEditedTodos] = useState<UpdateAndDeleteTodoType>({})
-    const [deletedTodos, setDeletedTodos] = useState<UpdateAndDeleteTodoType>({})
+    const [newAddedTodos, setNewAddedTodos] = useState<TodoType[]>([]);
     const [addedTodos, setAddedTodos] = useState<UpdateAndDeleteTodoType>({})
-    const [completedTodos, setCompletedTodos] = useState<UpdateAndDeleteTodoType>({})
-
-    const [updatedTodo, setUpdatedTodo] = useState("")
-    const [deletedTodo, setDeletedTodo] = useState("")
-    const [completedTodo, setCompletedTodo] = useState<UpdateAndDeleteTodoType>({})
     const [createdTodo, setCreatedTodo] = useState<any>({})
     const [isLoadingTodos, setIsLoadingTodos] = useState({loaded: false, error: false})
+    
+    /**
+     * Generate Api Service
+     *      
+     * @description To Generate CRUD api service
+     *   
+    */
     const service = useMemo(() => new API("todo"), []);
 
+    /**
+     * Use effect Hook
+     *
+     * @description To fetch and set todos
+     * 
+    */
     useEffect(() => {
         if(!isLoadingTodos.loaded && !todos.length) {
             service.get().then(({data, limit, skip, total}) => {
@@ -27,47 +34,18 @@ const useTodoContext = () => {
                     setPagination({limit, skip, total})
                     setTodos(data)
                 }
-            }).catch(err => {
+            }).catch(() => {
                 setIsLoadingTodos({loaded: true, error: true})
             })
         }
-    }, [todos, setTodos, service, setIsLoadingTodos])
-    
-    const deleteTodo = async(id: string) => {
-        setDeletedTodos({...deletedTodos, [id]: true});
-        try {
-            const deletedTodo = await service.updateOrDelete("DELETE", id);
-            setDeletedTodo(deletedTodo.id)
-        } catch(err) {
-            console.log("Error occured", err)
-        }
-    }
+    }, [todos, setTodos, service, setIsLoadingTodos, isLoadingTodos.loaded])
 
-    const editTodo = async (id: string, title: string) => {
-        setEditedTodos({...editedTodos, [id]: true});
-        try {
-            const updatedTodo: TodoType = await service.updateOrDelete("PATCH", id, {
-                title,
-            })
-            setUpdatedTodo(updatedTodo.id)
-        } catch(err) {
-            console.log("Error occured", err)
-        }
-    }
-
-    const completeTodo = async(id: string, completed: boolean) => {
-        setCompletedTodos({...completedTodos, [id]: true})
-        try {
-            const updatedTodo: TodoType = await service.updateOrDelete("PATCH", id, {
-                completed,
-            })
-            setCompletedTodo(updatedTodo)
-        } catch(err) {
-            console.log("Error occured", err)
-        }
-
-    }
-
+    /**
+     * Use effect Hook
+     *
+     * @description To add new todo
+     * 
+    */
     useEffect(() => {
         if(createdTodo.hasOwnProperty("id")) {
             const foundTodo = todos.find(({id}) => id === createdTodo.id)
@@ -82,10 +60,10 @@ const useTodoContext = () => {
                         delete previousAddedTodos[createdTodo.title]
                         return {...previousAddedTodos}
                     })
-                    setPagination(previusPagination=> {
+                    setPagination(previousPagination=> {
                         return {
-                            ...previusPagination,
-                            total: previusPagination.total + 1
+                            ...previousPagination,
+                            total: previousPagination.total + 1
                         }
                     })
                     setTodos((previousTodos) => [...previousTodos, createdTodo])
@@ -94,81 +72,34 @@ const useTodoContext = () => {
         }
     }, [createdTodo, setCreatedTodo, setAddedTodos, setNewAddedTodos, newAddedTodos, todos])
 
-    useEffect(() => {
-        if(updatedTodo !== "") {
-            setUpdatedTodo("")
-            setEditedTodos(previousEditedTodos => {
-                delete previousEditedTodos[updatedTodo];
-                return {...editedTodos}
-            })
-        }
-      
-    }, [updatedTodo, setEditedTodos])
-
-    useEffect(() => {
-        if(completedTodo.hasOwnProperty("id")) {
-            const foundTodo = todos.find(todo => todo.id === completedTodo.id)
-            if(foundTodo) {
-                foundTodo.completed = completedTodo.completed;
-                delete completedTodos[completedTodo.id]
-                setCompletedTodo({})
-                setCompletedTodos({...completedTodos})
-                setTodos([...todos])
-            }
-        }
-    }, [completedTodo, setCompletedTodo, todos, setCompletedTodos, completedTodos])
-
-    useEffect(() => {
-        if(deletedTodo !== "") {
-            const foundTodoIndex = todos.findIndex(({id}) => id === deletedTodo)
-            if(foundTodoIndex > -1) {
-                setDeletedTodo("")
-
-                setTodos((previousTodos) => {
-                    previousTodos.splice(foundTodoIndex, 1)
-                   return  [...previousTodos]
-                })
-                
-                setDeletedTodos(previousDeletedTodos => {
-                    delete previousDeletedTodos[deletedTodo];
-                    return {...previousDeletedTodos}   
-                })
-                
-                setPagination(previusPagination=> {
-                    return {
-                        ...previusPagination,
-                        total: previusPagination.total - 1
-                    }
-                })
-            }
-        }
-      
-    }, [todos, setTodos, setDeletedTodos, setDeletedTodo, deletedTodo, setPagination])
-
-    const addTodo = async (todo: AddTodoType) => {
+    /**
+     * Add Todo
+     *
+     * @description To add new todo
+     * 
+     * @param todo: New todo data
+     * 
+    */
+    const addTodo = async (todo: TodoType) => {
         setAddedTodos({...addedTodos, [todo.title]: todo});
-        setNewAddedTodos(previousNewAddedTodos => [...previousNewAddedTodos, {title: todo.title, completed: false}])
+        setNewAddedTodos(previousNewAddedTodos => [...previousNewAddedTodos, {title: todo.title, completed: false, id: uuid4()}])
         try {
             const createdTodo = await service.post(todo);
             setCreatedTodo(createdTodo)
-            } catch(err) {
-                console.log("Error occured", err)
-            }
+        } catch(err) {
+            console.log("Error occurred", err)
+        }
     }
-
+    /**
+     * Main Return
+     *
+    */
     return { 
         todos,
         addedTodos,
         newAddedTodos,
-        editedTodos,
-        deletedTodos,
-        deleteTodo,
         setNewAddedTodos,
-        editTodo,
         addTodo,
-        setEditedTodos,
-        completeTodo,
-        completedTodos,
         pagination,
         setPagination,
         service,
