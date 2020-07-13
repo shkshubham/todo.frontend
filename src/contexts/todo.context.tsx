@@ -48,7 +48,7 @@ const useTodoContext = () => {
     useEffect(() => {
         if(createdTodo.hasOwnProperty("id")) {
             const foundIndex = newAddedTodos.findIndex(({id}) => id === createdTodo.ref)
-            
+
             if(foundIndex > -1) {
                 newAddedTodos.splice(foundIndex, 1)
                 setCreatedTodo({})

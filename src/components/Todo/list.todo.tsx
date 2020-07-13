@@ -243,12 +243,12 @@ const ListTodo = () => {
                 <tbody>
                     {
                         (loaded || todos.length)
-                        ? (todos.length
+                        ? ((todos.length || newAddedTodos.length)
                             ? <>
                                 {renderTodo(todos)}
                                 {renderTodo(newAddedTodos)}
                             </>
-                            : (!error && renderMessage(`No ${currentSelectedNav} todo found`))
+                            : (!error && renderMessage(`No ${currentSelectedNav} found`))
                         ): null
                     }
                         {
