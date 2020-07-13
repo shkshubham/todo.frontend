@@ -23,7 +23,7 @@ const ListTodo = () => {
         chuckNorrisJokes
     } = TodoContext.useContainer();
     const [todo, setTodo] = useState("");
-    const [currentSelectedNav, setCurrentSelectedNav] = useState("todos");
+    const [currentSelectedNav, setCurrentSelectedNav] = useState("All");
     const categories = useMemo(() => ["All", "Active", "Completed"], [])
     const [lastTodoElement, setLastTodoElement] = useState<HTMLTableRowElement | null>(null);
     const todosAndPaginationCount = useRef({
@@ -200,7 +200,6 @@ const ListTodo = () => {
     */
     const renderAllTodos = () => {
         return todos.map((todo) => {
-            // console.log(todo)
             return renderTodo(todo, false, false);
         })
     }
@@ -298,7 +297,7 @@ const ListTodo = () => {
         )
     }
 
-    const checkTodoLength = todos.length || chuckNorrisJokes.length;
+    const checkTodoLength = todos.length || (currentSelectedNav === "All" && chuckNorrisJokes.length);
 
     /**
      * Main Return
@@ -343,10 +342,15 @@ const ListTodo = () => {
                         (loaded || checkTodoLength)
                         ? ((checkTodoLength || Object.keys(newAddedTodos).length)
                             ? <>
-                                {renderChuckJokes()}
-                                <Col xs={12}>
-                                    <hr />
-                                </Col>
+                                {
+                                    currentSelectedNav === "All" && <>
+                                    {renderChuckJokes()}
+                                    <Col xs={12}>
+                                        <hr />
+                                    </Col>
+                                    </>
+                                }
+                               
                                 {renderTodoNewAddedTodos()}
                                 {renderAllTodos()}
                             </>
