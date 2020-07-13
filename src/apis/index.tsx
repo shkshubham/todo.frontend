@@ -16,7 +16,7 @@ export default class {
     }
 
     async get(query:any = null, skip = 0, limit=10) {
-        let url = `${this.service}?$skip=${skip}&$limit=${limit}`
+        let url = `${this.service}?$skip=${skip}&$limit=${limit}&$sort[createdAt]=-1`
 
         if(query) {
             Object.keys(query).forEach(key => {

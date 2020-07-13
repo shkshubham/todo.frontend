@@ -236,7 +236,7 @@ const ListTodo = () => {
     */
     const renderTodo = (todo: TodoType, addingTodoLoading: boolean, addingTodoError: boolean) => {
         return (
-            <Col key={todo.id} xs={12}>
+            <Col className="todo-item" key={todo.id} xs={12}>
                 <ShowTodo 
                     setLastTodoElement={setLastTodoElement}
                     todo={todo}
@@ -276,7 +276,6 @@ const ListTodo = () => {
             </Nav>
         )
     }
-    
     /**
      * Main Return
      *      
@@ -286,9 +285,10 @@ const ListTodo = () => {
             <div className="sticky-top py-2" id="top-menu">
                 <Row>
                     <Col xs={12}>
-                        <Form onSubmit={onSubmitAddTodo}>
+                        <Form id="add-todo-form" onSubmit={onSubmitAddTodo}>
                             <input
                                 type="text" 
+                                id="add-todo"
                                 className="todo-input rounded shadow-sm"
                                 placeholder="Add todo..." 
                                 maxLength={256}
@@ -319,8 +319,8 @@ const ListTodo = () => {
                         (loaded || todos.length)
                         ? ((todos.length || Object.keys(newAddedTodos).length)
                             ? <>
-                                {renderAllTodos()}
                                 {renderTodoNewAddedTodos()}
+                                {renderAllTodos()}
                             </>
                             : 
                             <Col xs={12}>
@@ -330,6 +330,7 @@ const ListTodo = () => {
                             </Col>
                         ): null
                     }
+                    {renderTodoNewAddedTodos()}
                 </Row>
                 <Col className="text-center">
                     {

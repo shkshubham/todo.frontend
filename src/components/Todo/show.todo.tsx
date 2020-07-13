@@ -28,8 +28,6 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
     const [deleteStatus, setDeleteStatus] = useState<APIStatusType>(initialApiStatus);
     const [isTodoCompleted, setIsTodoCompleted] = useState(completed);
     const [eventType, setEventType] = useState("none");
-    const checkIconClassName = "far fa-check-square";
-
     /**
      * Toggle Edit Button
      *
@@ -101,7 +99,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
     const apiErrorCallback = (previousStatus: APIStatusType) => {
         return setApiStatusCallback(previousStatus, {error: true})
     }
- 
+
     /**
      * Alter Todo
      *
@@ -183,7 +181,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
      * @param e: Event
      *
     */
-    const onCompleteBtnClicked = (e: any) => {
+    const onCompleteBtnClicked = () => {
         !isLoading && completeTodo(id, !isTodoCompleted)
     }
 
@@ -194,7 +192,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
      *   
     */
     const onDeleteBtnClicked = () => {
-        const response = window.confirm("Are you sure, You want to delete this todo?");
+        const response = window.confirm("Are you sure?");
         if (response === true) {
             alterTodo(id, {}, setDeleteStatus, "DELETE").then(() => {
                 setCount((previousState => {
@@ -252,7 +250,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
                                 type="text" 
                                 value={inputValue}
                                 onChange={onInputChange}
-                                className="mb-2 todo-input rounded border"
+                                className="mb-2 todo-input edit-todo rounded border"
                             />
                         </Col>
                         <Col sm={2}>
@@ -278,8 +276,8 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
             <>
             <Col xs={10}>
                 <div className="d-flex">
-                    <button onClick={onCompleteBtnClicked} className="btn btn-circle">
-                        <i className={isTodoCompleted ? `completed-check ${checkIconClassName}` : checkIconClassName}></i>
+                    <button onClick={onCompleteBtnClicked} className="btn btn-circle complete-btn">
+                        <i className={isTodoCompleted ? `completed-check far fa-check-square` : "far fa-square"}></i>
                     </button>
                      <div className="py-1">
                         {

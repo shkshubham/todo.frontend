@@ -88,3 +88,8 @@ $navItemColor: #6c757d;
     }
 }
     
+.complete-btn {
+    &:focus {
+        box-shadow: none !important;
+    }
+}
