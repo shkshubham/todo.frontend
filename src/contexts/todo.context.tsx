@@ -1,5 +1,5 @@
 import { createContainer } from "unstated-next";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { TodoType, UpdateAndDeleteTodoType, PaginationType, AddTodoType } from '../types';
 import API from '../apis';
 import RequestHandler from "../utils/RequestHandler";
@@ -17,7 +17,25 @@ const useTodoContext = () => {
     })
     const [chuckNorrisJokes, setCheckNorrisJokes] = useState<any[]>([])
 
-    const fetchChuckNorrisJokes: any = () => {
+    /**
+     * Generate Api Service
+     *      
+     * @description To Generate CRUD api service
+     *   
+    */
+    const service = useMemo(() => new API("todo"), []);
+
+    /**
+     * Fetch Chuck Norris Jokes & Todo(s)
+     *
+     * @description To fetch Chuck norris jokes & todo(s)
+     *   
+     * @param type: (loading | error) 
+     *     
+     * @returns {Promise[]}
+     *
+    */
+    const fetchChuckNorrisJokes: any = useCallback(() => {
         return new Promise((resolve, reject) => {
             const todosPromises: Promise<any>[] = [];
             const array = [1,2,3]
@@ -31,14 +49,7 @@ const useTodoContext = () => {
                 return reject(null)
             })
         })
-    }
-    /**
-     * Generate Api Service
-     *      
-     * @description To Generate CRUD api service
-     *   
-    */
-    const service = useMemo(() => new API("todo"), []);
+    }, [service])
 
     /**
      * Use effect Hook
@@ -63,7 +74,7 @@ const useTodoContext = () => {
                 setIsLoadingTodos({loaded: true, error: true})
             })
         }
-    }, [todos, setTodos, service, setIsLoadingTodos, isLoadingTodos.loaded])
+    }, [todos, setTodos, service, setIsLoadingTodos, isLoadingTodos.loaded, fetchChuckNorrisJokes])
 
     /**
      * Use effect Hook
