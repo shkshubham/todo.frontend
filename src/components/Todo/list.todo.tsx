@@ -297,6 +297,9 @@ const ListTodo = () => {
             </Nav>
         )
     }
+
+    const checkTodoLength = todos.length || chuckNorrisJokes.length;
+
     /**
      * Main Return
      *      
@@ -337,8 +340,8 @@ const ListTodo = () => {
                         <hr />
                     </Col>
                     {
-                        (loaded || todos.length)
-                        ? ((todos.length || Object.keys(newAddedTodos).length)
+                        (loaded || checkTodoLength)
+                        ? ((checkTodoLength || Object.keys(newAddedTodos).length)
                             ? <>
                                 {renderChuckJokes()}
                                 <Col xs={12}>

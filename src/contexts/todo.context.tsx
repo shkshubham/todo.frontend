@@ -19,12 +19,13 @@ const useTodoContext = () => {
 
     const fetchChuckNorrisJokes: any = () => {
         return new Promise((resolve, reject) => {
-            const jokesPromiseList: Promise<any>[] = [];
+            const todosPromises: Promise<any>[] = [];
             const array = [1,2,3]
             array.forEach(() => {
-                jokesPromiseList.push(RequestHandler.get(CHUCK_NORRIS_URL))
+                todosPromises.push(RequestHandler.get(CHUCK_NORRIS_URL))
             });
-           return Promise.all(jokesPromiseList).then((apiData) => {
+            todosPromises.push(service.get())
+           return Promise.all(todosPromises).then((apiData) => {
                 return resolve(apiData)
             }).catch(() => {
                 return reject(null)
@@ -48,16 +49,18 @@ const useTodoContext = () => {
     useEffect(() => {
         if(!isLoadingTodos.loaded && !todos.length) {
             fetchChuckNorrisJokes().then((jokesList: any[]) => {
-                setCheckNorrisJokes([...jokesList])
-                service.get().then(({data, limit, skip, total}) => {
-                    setIsLoadingTodos({loaded: true, error: false})
+                const [todosResponse] = jokesList.splice(jokesList.length -1, jokesList.length);
+                if(todosResponse) {
+                    const { data, ...pagination } = todosResponse
                     if(data.length) {
-                        setPagination({limit, skip, total})
+                        setPagination(pagination)
                         setTodos(data)
                     }
-                }).catch(() => {
-                    setIsLoadingTodos({loaded: true, error: true})
-                })
+                    setIsLoadingTodos({loaded: true, error: false})
+                }
+                setCheckNorrisJokes([...jokesList])
+            }).catch(() => {
+                setIsLoadingTodos({loaded: true, error: true})
             })
         }
     }, [todos, setTodos, service, setIsLoadingTodos, isLoadingTodos.loaded])
