@@ -2,6 +2,8 @@ import { createContainer } from "unstated-next";
 import { useState, useEffect, useMemo } from "react";
 import { TodoType, UpdateAndDeleteTodoType, PaginationType, AddTodoType } from '../types';
 import API from '../apis';
+import RequestHandler from "../utils/RequestHandler";
+import { CHUCK_NORRIS_URL } from "../config";
 
 const useTodoContext = () => {
     const [todos, setTodos] = useState<TodoType[]>([])
@@ -13,7 +15,22 @@ const useTodoContext = () => {
         total: pagination.total,
         todos: todos.length
     })
+    const [chuckNorrisJokes, setCheckNorrisJokes] = useState<any[]>([])
 
+    const fetchChuckNorrisJokes: any = () => {
+        return new Promise((resolve, reject) => {
+            const jokesPromiseList: Promise<any>[] = [];
+            const array = [1,2,3]
+            array.forEach(() => {
+                jokesPromiseList.push(RequestHandler.get(CHUCK_NORRIS_URL))
+            });
+           return Promise.all(jokesPromiseList).then((apiData) => {
+                return resolve(apiData)
+            }).catch(() => {
+                return reject(null)
+            })
+        })
+    }
     /**
      * Generate Api Service
      *      
@@ -30,14 +47,17 @@ const useTodoContext = () => {
     */
     useEffect(() => {
         if(!isLoadingTodos.loaded && !todos.length) {
-            service.get().then(({data, limit, skip, total}) => {
-                setIsLoadingTodos({loaded: true, error: false})
-                if(data.length) {
-                    setPagination({limit, skip, total})
-                    setTodos(data)
-                }
-            }).catch(() => {
-                setIsLoadingTodos({loaded: true, error: true})
+            fetchChuckNorrisJokes().then((jokesList: any[]) => {
+                setCheckNorrisJokes([...jokesList])
+                service.get().then(({data, limit, skip, total}) => {
+                    setIsLoadingTodos({loaded: true, error: false})
+                    if(data.length) {
+                        setPagination({limit, skip, total})
+                        setTodos(data)
+                    }
+                }).catch(() => {
+                    setIsLoadingTodos({loaded: true, error: true})
+                })
             })
         }
     }, [todos, setTodos, service, setIsLoadingTodos, isLoadingTodos.loaded])
@@ -61,12 +81,12 @@ const useTodoContext = () => {
                     total: previousPagination.total + 1
                 }
             })
-            setTodos(previousTodos=> [...previousTodos, createdTodo])
+            setTodos(previousTodos=> [createdTodo, ...previousTodos])
         } else if(createdTodo.error) {
             newAddedTodos[createdTodo.ref].error = true
             setCreatedTodo({...newAddedTodos})
         }
-    }, [createdTodo, setCreatedTodo, setNewAddedTodos, todos])
+    }, [createdTodo, setCreatedTodo, setNewAddedTodos, todos, newAddedTodos])
 
     /**
      * Add Todo
@@ -96,6 +116,7 @@ const useTodoContext = () => {
         todos,
         count,
         setCount,
+        chuckNorrisJokes,
         newAddedTodos,
         setNewAddedTodos,
         addTodo,

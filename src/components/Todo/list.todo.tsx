@@ -19,7 +19,8 @@ const ListTodo = () => {
         isLoadingTodos: {loaded, error},
         setIsLoadingTodos,
         count,
-        setCount
+        setCount,
+        chuckNorrisJokes
     } = TodoContext.useContainer();
     const [todo, setTodo] = useState("");
     const [currentSelectedNav, setCurrentSelectedNav] = useState("todos");
@@ -69,9 +70,12 @@ const ListTodo = () => {
     */
     useEffect(() => {
         todosAndPaginationCount.current.todos = todos.length;
-        setCount((previousState) => {
-            return {...previousState, todos: todos.length}
-        })
+        if(todos.length) {
+            setCount((previousState) => {
+                return {...previousState, todos: todos.length + 3}
+            })
+        }
+
     }, [todos, setCount])
     /**
      * Use effect Hook
@@ -81,10 +85,13 @@ const ListTodo = () => {
     */
     useEffect(() => {
         todosAndPaginationCount.current.pagination = pagination;
-        setCount((previousState) => {
-            return {...previousState, total: pagination.total}
-        })
-    }, [pagination])
+        if(pagination.total) {
+            setCount((previousState) => {
+                return {...previousState, total: pagination.total + 3}
+            })
+        }
+
+    }, [pagination, setCount])
 
     /**
      * Use effect Hook
@@ -193,6 +200,7 @@ const ListTodo = () => {
     */
     const renderAllTodos = () => {
         return todos.map((todo) => {
+            // console.log(todo)
             return renderTodo(todo, false, false);
         })
     }
@@ -254,12 +262,25 @@ const ListTodo = () => {
      *      
     */
     const renderNavItem = () => {
-        return categories.map((category) => {
+        return categories.map((category, index) => {
             return (
-                <Nav.Item>
+                <Nav.Item key={`nav_${index}`}>
                     <Nav.Link eventKey={category}>{category}</Nav.Link>
                 </Nav.Item>
             )
+        })
+    }
+
+
+    /**
+     * Render Chuck Jokes
+     * 
+     * @description To render chuck jokes.
+     *      
+    */
+    const renderChuckJokes = () => {
+        return chuckNorrisJokes.map(({value, id}) => {
+            return renderTodo({title: value, id, completed: false, joke: true}, false, false)
         })
     }
 
@@ -319,6 +340,10 @@ const ListTodo = () => {
                         (loaded || todos.length)
                         ? ((todos.length || Object.keys(newAddedTodos).length)
                             ? <>
+                                {renderChuckJokes()}
+                                <Col xs={12}>
+                                    <hr />
+                                </Col>
                                 {renderTodoNewAddedTodos()}
                                 {renderAllTodos()}
                             </>

@@ -1,5 +1,5 @@
 export default class {
-    async get(url: string) {
+    static async get(url: string) {
         try {
             const response = await fetch(url);
             if (response.ok) {

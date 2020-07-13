@@ -7,6 +7,7 @@ export interface TodoType {
     title: string;
     completed: boolean;
     id: string;
+    joke?: boolean;
     [key: string]: any;
 }
 

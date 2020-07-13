@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo } from 'react';
 import { TodoType, APIStatusType, APIStatusUpdateType, UpdateTodoType } from '../../types';
-import { Button, Form, Col, Row, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Form, Col, Row } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
 import Loader from '../includes/Loader/loader';
 
@@ -11,7 +11,7 @@ interface ShowTodoPropsTypes {
     addingTodoError: boolean;
 }
 
-const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoLoading, addingTodoError}: ShowTodoPropsTypes) => {
+const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addingTodoLoading, addingTodoError}: ShowTodoPropsTypes) => {
     const initialApiStatus = useMemo(() =>{
         return {
             loading: false,
@@ -326,8 +326,21 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
      * @returns {boolean}
      *
     */
-    const additionalClass = isError ? "failed" : isLoading? "disabled text-muted" : isTodoCompleted ? "completed" : "incomplete"
+    // const additionalClass = isError ? "failed" : isLoading ? "disabled text-muted" : isTodoCompleted ? "completed" : "incomplete";
 
+    const additionalClass = () => {
+        if(isError) {
+            return "failed"
+        } else if(isLoading) {
+            return "disabled text-muted"
+        } else if(isTodoCompleted) {
+            return "completed"
+        } else if(joke) {
+            return "todo-joke no-pointer"
+        } else {
+            return "incomplete"
+        }
+    }
     /**
      * Main Return
     */
@@ -335,7 +348,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoL
         <>
             <div 
                 ref={(el) => todos.length && todos[todos.length -1].id === id && todos.length >= pagination.limit && setLastTodoElement(el)}
-                className={`todo-container word-break-all ${additionalClass}`} 
+                className={`todo-container word-break-all ${additionalClass()}`} 
                 onMouseEnter={() => setShowToolbar(true)} 
                 onMouseLeave={() => setShowToolbar(false)}
             >
