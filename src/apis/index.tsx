@@ -12,7 +12,7 @@ export default class {
         if (response.ok) {
             return await response.json();
         }
-        return response;
+        throw response;
     }
 
     async get(query:any = null, skip = 0, limit=10) {
