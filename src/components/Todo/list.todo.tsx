@@ -309,7 +309,7 @@ const ListTodo = () => {
                         <Form id="add-todo-form" onSubmit={onSubmitAddTodo}>
                             <input
                                 type="text" 
-                                id="add-todo"
+                                id="add-todo-input"
                                 className="todo-input rounded shadow-sm"
                                 placeholder="Add todo..." 
                                 maxLength={256}
