@@ -1,17 +1,90 @@
-#top-menu {
+$boxShadow: 0 .5rem 1rem rgba(0,0,0,.15);
+$completedColor: #28a745;
+$navItemColor: #6c757d;
+
+.sticky-top {
     background-color: #fff;
 }
 
-.todo-table {
-    .todo-item {
-        font-size: 2rem;
-        .form-check {
-            transition: all .5s ease-in-out;
+.todo-container {
+    transition: all .3s ease-in-out;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin: 16px;
+}
+
+.todo-container:hover {
+    box-shadow: $boxShadow;
+}
+
+.todo-text {
+    padding: 12px 16px;
+    font-size: 18px;
+    min-height: 60px;
+}
+
+.btn-circle {
+    padding: 10px 14px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    color: #202124;
+    opacity: .70;
+}
+
+.btn-circle:hover {
+    opacity: 1;
+    background-color: rgba(95,99,104,0.157)
+}
+
+.failed {
+    border-left: 5px solid #dc3545;
+    opacity: 0.75;
+}
+
+.completed {
+    border-left : 5px solid $completedColor;
+    opacity: 0.75;
+}
+
+.completed-check {
+    color: $completedColor;
+    opacity: 1;
+}
+
+.incomplete {
+    border-left: 5px solid #bbb;
+}
+
+.todo-input { 
+    border-color: #e0e0e0;
+    height: 46px;
+    padding: 12px 16px 12px 16px;
+    width: 100%;
+    outline: none;
+    border: none;
+}
+.no-pointer {
+    pointer-events: none;
+    opacity: .50;
+}
+
+.word-break-all {
+    word-break: break-all !important;
+}
+
+.todo-nav {
+  .nav-link {
+        color: $navItemColor;
+        transition: all 0.3s ease-in-out;
+        &:hover {
+            opacity: .8;
+            color: #fff;
+            background-color:$navItemColor;
         }
-        input[type=radio] {
-            width: 25px;
-            height: 25px;
-        }
-        cursor: pointer;
+    }
+    .active {
+        background-color: $navItemColor !important;
     }
 }
+    

@@ -1,4 +1,5 @@
 import { REACT_APP_API_URL } from "../config";
+import axios, { AxiosResponse } from 'axios';
 
 export default class {
     private readonly service: string;
@@ -31,18 +32,16 @@ export default class {
         }
     }
 
-    async post(data: any) {
+    async post(data: any, Ref: string) {
         try {
-            const response = await fetch(this.service, {
-                method: 'POST',
+            const response = await axios.post(this.service, data, {
                 headers: {
-                  'Content-Type': 'application/json;charset=utf-8'
-                },
-                body: JSON.stringify(data)
-              });
-            return this.checkAndGetResponse(response)
+                    Ref
+                }
+            })
+            return {...response.data, ...this.privateGetRef(response)}
         } catch(err) {
-            throw new Error(err);
+            throw this.privateGetRef(err.response);
         }
     }
 
@@ -59,5 +58,11 @@ export default class {
         } catch(err) {
             throw new Error(err);
         }
+    }
+
+    privateGetRef(response: AxiosResponse<any>): any {
+        return {
+            ref: response.config.headers.Ref
+        };
     }
 }

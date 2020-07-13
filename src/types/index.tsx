@@ -1,7 +1,6 @@
 export interface AddTodoType extends Object {
     title: string;
     completed: boolean;
-    ref: string;
 }
 
 export interface TodoType {

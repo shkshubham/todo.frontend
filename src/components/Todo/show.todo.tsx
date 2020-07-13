@@ -6,11 +6,12 @@ import Loader from '../includes/Loader/loader';
 
 interface ShowTodoPropsTypes {
     todo: TodoType;
-    setLastTodoElement: React.Dispatch<React.SetStateAction<HTMLTableRowElement | null>>;
-    loading: boolean;
+    setLastTodoElement: any;
+    addingTodoLoading: boolean;
+    addingTodoError: boolean;
 }
 
-const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: ShowTodoPropsTypes) => {
+const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, addingTodoLoading, addingTodoError}: ShowTodoPropsTypes) => {
     const initialApiStatus = useMemo(() =>{
         return {
             loading: false,
@@ -18,15 +19,16 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
             done: false
         }
     }, [])
-    const { todos, pagination, service, setPagination } = TodoContext.useContainer()
-    const [isShown, setIsShown] = useState(false);
-    const className = "todo-item";
+    const { todos, pagination, service, setPagination, addTodo, setNewAddedTodos, setCount } = TodoContext.useContainer()
+    const [showToolbar, setShowToolbar] = useState(false);
     const [inputValue, setInputValue] = useState(title)
     const [editBtnClicked, setEditBtnClicked] = useState(false)
     const [updateStatus, setUpdateStatus] = useState<APIStatusType>(initialApiStatus);
     const [completeStatus, setCompleteStatus] = useState<APIStatusType>(initialApiStatus);
     const [deleteStatus, setDeleteStatus] = useState<APIStatusType>(initialApiStatus);
     const [isTodoCompleted, setIsTodoCompleted] = useState(completed);
+    const [eventType, setEventType] = useState("none");
+    const checkIconClassName = "far fa-check-square";
 
     /**
      * Toggle Edit Button
@@ -113,6 +115,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
      * @returns {Promise<TodoType>}
     */
     const alterTodo = (id: string, data: UpdateTodoType, setCallback: React.Dispatch<React.SetStateAction<APIStatusType>>, method="PATCH"): Promise<TodoType> => {
+        setEventType(method)
         return new Promise(async (resolve) => {
             setCallback(apiProcessingCallback)
             try {
@@ -135,6 +138,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
      *
     */
     const completeTodo = async(id: string, completed: boolean) => {
+        setEventType("PATCH")
         alterTodo(id, {completed}, setCompleteStatus).then((response) => {
             setIsTodoCompleted(response.completed)
         })
@@ -157,7 +161,7 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
     /**
      * Check Api Status
      *
-     * @description To check api (loading & error) status of on updating, deleting & changing complete status.
+     * @description To check api (loading & error) status of updating, deleting & changing complete status.
      *   
      * @param type: (loading | error) 
      *     
@@ -165,8 +169,11 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
      *
     */
     const checkApiStatus = (type: string) => {
-        return deleteStatus[type] || updateStatus[type] || completeStatus[type] || (type === "loading" && loading);
+        return deleteStatus[type] || updateStatus[type] || completeStatus[type] || (type === "loading" ? addingTodoLoading : addingTodoError);
     }
+
+    const isError = checkApiStatus("error");
+    const isLoading = checkApiStatus("loading");
 
     /**
      * On Todo Radio Button Clicked
@@ -176,8 +183,8 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
      * @param e: Event
      *
     */
-    const onTodoRadioBtnClicked = (e: any) => {
-        !checkApiStatus("loading") && completeTodo(id, !isTodoCompleted)
+    const onCompleteBtnClicked = (e: any) => {
+        !isLoading && completeTodo(id, !isTodoCompleted)
     }
 
     /**
@@ -190,6 +197,9 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
         const response = window.confirm("Are you sure, You want to delete this todo?");
         if (response === true) {
             alterTodo(id, {}, setDeleteStatus, "DELETE").then(() => {
+                setCount((previousState => {
+                    return {...previousState, total: previousState.total - 1}
+                }))
                 setPagination(previousPagination=> {
                     return {
                         ...previousPagination,
@@ -201,30 +211,9 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
     }
 
     /**
-     * Render Tooltip
+     * On Try Again Button clicked 
      *
-     * @description Use to render tooltip.
-     *   
-     * @param props: Props for tooltip
-     *
-    */
-    const renderTooltip = (props: any) => {
-        return (
-          <Tooltip id="radio-tooltip" {...props}>
-              {
-                  !checkApiStatus("loading")  ?
-                  `Mark as ${isTodoCompleted ? "not completed" : "completed"}`
-                  : !checkApiStatus("error") ? "Wait" : "Failed"
-              }
-
-          </Tooltip>
-        );
-    }
-
-    /**
-     * Render Tooltip
-     *
-     * @description Use to render tooltip.
+     * @description To retry the api call for update, delete and changing complete status.
      *   
      * @param props: Props for tooltip
      *
@@ -232,10 +221,20 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
     const onTryAgainBtnClicked = () => {
         setDeleteStatus(initialApiStatus)
         setUpdateStatus(initialApiStatus)
-        // editTodo(id, inputValue)
-        alterTodo(id, {title: inputValue, completed: isTodoCompleted }, setUpdateStatus)
+        if(typeof id === "number") {
+            if(eventType === "PATCH") {
+                alterTodo(id, {title: inputValue, completed: isTodoCompleted }, setUpdateStatus)
+            } else {
+                alterTodo(id, {}, setDeleteStatus, "DELETE")
+            }
+        } else {
+            setNewAddedTodos(previousState => {
+                delete previousState[id]
+                return {...previousState};
+            })
+            addTodo({title, completed}, id)
+        }
     }
-
     /**
      * Render Edit Todo
      *
@@ -244,87 +243,110 @@ const ShowTodo = ({todo: {title, id, completed}, setLastTodoElement, loading}: S
     */
     const renderEditTodo = () => {
         return (
-            <tr>
-                <td className="py-4">
-                    <Form onSubmit={onSubmitTodoUpdateForm}>
-                        <Row>
-                            <Col sm={6}>
-                                <Form.Control value={inputValue} onChange={onInputChange} className="mb-2" type="text" />
-                            </Col>
-                            <Col sm={6}>
-                                <Button size="sm" type="submit">Save</Button>
-                                <Button size="sm" onClick={onCancelBtnClicked}>Cancel</Button>
-                            </Col>
-                        </Row>
-                    </Form>
-                </td>
-            </tr>
+            <Col xs={12}>
+                <Form onSubmit={onSubmitTodoUpdateForm}>
+                    <Row>
+                        <Col xs={10}>
+                            <input 
+                                maxLength={256}
+                                type="text" 
+                                value={inputValue}
+                                onChange={onInputChange}
+                                className="mb-2 todo-input rounded border"
+                            />
+                        </Col>
+                        <Col sm={2}>
+                            <div className="py-2 d-flex justify-content-end">
+                                <Button className="mx-2" size="sm" variant="success" type="submit">Save</Button>
+                                <Button size="sm" variant="danger" onClick={onCancelBtnClicked}>Cancel</Button>
+                            </div>
+                        </Col>
+                    </Row>
+                </Form>
+            </Col>
         )
     }
 
     /**
      * Render Show Todo
      *
-     * @description To render todo section.
+     * @description To render show todo section.
      *   
     */
     const renderShowTodo = () => {
         return (
-            <tr 
-                ref={(el) => todos.length && todos[todos.length -1].id === id && todos.length >= pagination.limit && setLastTodoElement(el)}
-                onMouseEnter={() => setIsShown(true)}
-                onMouseLeave={() => setIsShown(false)}
-                className={checkApiStatus("loading")  ? `text-muted ${className}` : className}
-            >
-            <td className="py-4"> 
-                <OverlayTrigger
-                    key="radio-tooltip"
-                    placement="left"
-                    delay={{ show: 250, hide: 400 }}
-                    overlay={renderTooltip}
-                >
-                <Form.Check 
-                    disabled={checkApiStatus("error")}
-                    defaultChecked={isTodoCompleted}
-                    onClick={onTodoRadioBtnClicked}
-                    inline
-                    label={
-                        <div className={checkApiStatus("error") ? "text-danger" : ""}>
-                            {
-                                !isTodoCompleted 
-                                ? inputValue 
-                                : <del className="text-muted">{inputValue}</del>
-                            }
-                        </div>
-                    }
-                    type={"radio"} 
-                />
-                </OverlayTrigger>
-            </td>
-                <td>{isShown ?
-                    (
-                        !checkApiStatus("loading") ?
-                        <>
-                            {!completed && <Button onClick={toggleEditBtn} size="sm">Edit</Button>}
-                            <Button size="sm" variant="danger" onClick={onDeleteBtnClicked}>Delete</Button>
-                        </>
-                        : 
-                        checkApiStatus("error")
-                            ? <Button onClick={onTryAgainBtnClicked} variant="danger" size="sm">Try Again</Button>
-                            : <Loader />
-                        
-                    )
-                    : null}</td>
-            </tr>
+            <>
+            <Col xs={10}>
+                <div className="d-flex">
+                    <button onClick={onCompleteBtnClicked} className="btn btn-circle">
+                        <i className={isTodoCompleted ? `completed-check ${checkIconClassName}` : checkIconClassName}></i>
+                    </button>
+                     <div className="py-1">
+                        {
+                            !isTodoCompleted 
+                            ? inputValue 
+                            : <del className="text-muted">{inputValue}</del>
+                        }
+                     </div>
+                </div>
+            </Col>
+            <Col xs={2}>
+              {  
+                  !isError
+                      ? (showToolbar && !isLoading) && 
+                      <div className={"d-flex justify-content-end visible"}>
+                          <button onClick={toggleEditBtn} className="btn btn-circle">
+                              <i className="fas fa-pencil-alt"></i>
+                          </button>
+                          <button onClick={onDeleteBtnClicked} className="btn btn-circle">
+                              <i className="far fa-trash-alt"></i>
+                          </button>
+                          
+                      </div>
+                      : <div className="d-flex justify-content-end text-center">
+                          <button onClick={onTryAgainBtnClicked} className="btn btn-circle">
+                              <i className="fas fa-redo"></i>
+                          </button>
+                      </div>
+              }
+               {
+                  (isLoading && !isError) && 
+                      <Loader />
+              }
+          </Col>
+          </>
         )
     }
+
+    /**
+     * Set Additional Classes
+     *
+     * @description To check api (loading & error) status of updating, deleting & changing complete status.
+     *   
+     * @param type: (loading | error) 
+     *     
+     * @returns {boolean}
+     *
+    */
+    const additionalClass = isError ? "failed" : isLoading? "disabled text-muted" : isTodoCompleted ? "completed" : "incomplete"
 
     /**
      * Main Return
     */
     return !deleteStatus.done ? (
         <>
-            {!editBtnClicked ? renderShowTodo() : renderEditTodo()}
+            <div 
+                ref={(el) => todos.length && todos[todos.length -1].id === id && todos.length >= pagination.limit && setLastTodoElement(el)}
+                className={`todo-container word-break-all ${additionalClass}`} 
+                onMouseEnter={() => setShowToolbar(true)} 
+                onMouseLeave={() => setShowToolbar(false)}
+            >
+            <Row className="todo-text">
+                {
+                    !editBtnClicked ? renderShowTodo() : renderEditTodo()
+                }
+            </Row>
+            </div>
         </>
     ) : null
 }

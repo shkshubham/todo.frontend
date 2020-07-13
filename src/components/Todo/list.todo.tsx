@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import TodoContext from '../../contexts/todo.context';
-import { Form, Table, Nav, Col, Row } from 'react-bootstrap';
+import { Form, Nav, Col, Row } from 'react-bootstrap';
 import ShowTodo from './show.todo';
 import './todo.scss';
 import Loader from '../includes/Loader/loader';
@@ -11,20 +11,22 @@ const ListTodo = () => {
     const {
         todos,
         newAddedTodos,
-        addedTodos,
         addTodo,
         service,
         pagination,
         setTodos,
         setPagination,
         isLoadingTodos: {loaded, error},
-        setIsLoadingTodos
+        setIsLoadingTodos,
+        count,
+        setCount
     } = TodoContext.useContainer();
-    const [todo, setTodo] = useState("")
-    const [currentSelectedNav, setCurrentSelectedNav] = useState("todos")
-    const [lastTodoElement, setLastTodoElement] = useState<HTMLTableRowElement | null>(null)
-    const localTodosAndPagination = useRef({
-        todos,
+    const [todo, setTodo] = useState("");
+    const [currentSelectedNav, setCurrentSelectedNav] = useState("todos");
+    const categories = useMemo(() => ["All", "Active", "Completed"], [])
+    const [lastTodoElement, setLastTodoElement] = useState<HTMLTableRowElement | null>(null);
+    const todosAndPaginationCount = useRef({
+        todos: todos.length,
         pagination,
         loading: false
     })
@@ -41,12 +43,12 @@ const ListTodo = () => {
         new IntersectionObserver(
           entries => {
             const first = entries[0];
-            const {loading, todos, pagination} = localTodosAndPagination.current;
-            if (!loading && first.isIntersecting && todos.length < pagination.total) {
+            const {loading, todos, pagination} = todosAndPaginationCount.current;
+            if (!loading && first.isIntersecting && todos < pagination.total) {
                 setIsLoadingTodos({loaded: false, error: false})
-                localTodosAndPagination.current.loading = true
-                service.get(null, todos.length).then(({data, limit, skip, total}) => {
-                    localTodosAndPagination.current.loading = false
+                todosAndPaginationCount.current.loading = true
+                service.get(null, todos).then(({data, limit, skip, total}) => {
+                    todosAndPaginationCount.current.loading = false
                     setIsLoadingTodos({loaded: true, error: false})
                     setPagination({limit, skip, total})
                     setTodos((previousTodo) => [...previousTodo, ...data])
@@ -66,9 +68,11 @@ const ListTodo = () => {
      * 
     */
     useEffect(() => {
-        localTodosAndPagination.current.todos = todos;
-    }, [todos])
-
+        todosAndPaginationCount.current.todos = todos.length;
+        setCount((previousState) => {
+            return {...previousState, todos: todos.length}
+        })
+    }, [todos, setCount])
     /**
      * Use effect Hook
      *
@@ -76,7 +80,10 @@ const ListTodo = () => {
      * 
     */
     useEffect(() => {
-        localTodosAndPagination.current.pagination = pagination;
+        todosAndPaginationCount.current.pagination = pagination;
+        setCount((previousState) => {
+            return {...previousState, total: pagination.total}
+        })
     }, [pagination])
 
     /**
@@ -122,11 +129,13 @@ const ListTodo = () => {
         e.preventDefault()
         if(todo.length) {
             setTodo("")
+            setCount(({total, todos}) => {
+                return {total: total + 1, todos: todos + 1}
+            })
             addTodo({
-                ref: uuidv4(),
                 title: todo,
                 completed: false
-            });
+            }, uuidv4());
         }
     }
 
@@ -141,10 +150,10 @@ const ListTodo = () => {
     */
     const setQuery = (query: UpdateTodoType, category: string) => {
         switch(category) {
-            case "active":
+            case "Active":
                 query.completed = false
                 break;
-            case "completed":
+            case "Completed":
                 query.completed = true
                 break;
             default: 
@@ -182,16 +191,9 @@ const ListTodo = () => {
      * @param todoList: Todo Array which have to display.
      *   
     */
-    const renderTodo = (todoList: TodoType[]) => {
-        return todoList.map((todo) => {
-            return (
-                    <ShowTodo 
-                        setLastTodoElement={setLastTodoElement}
-                        todo={todo}
-                        key={todo.id} 
-                        loading={addedTodos.hasOwnProperty(todo.id)}
-                    />
-            );
+    const renderAllTodos = () => {
+        return todos.map((todo) => {
+            return renderTodo(todo, false, false);
         })
     }
 
@@ -204,58 +206,136 @@ const ListTodo = () => {
      *   
     */
     const renderMessage = (msg: string) => {
-        return  <tr className="text-center">
-            <td>
+        return  <div className="text-center">
                 <h4>{msg}</h4>
-            </td>
-        </tr>
+        </div>
     }
 
+    /**
+     * Render New Added Todos
+     * 
+     * @description To render new added todos
+     *      
+    */
+    const renderTodoNewAddedTodos = () => {
+        return Object.keys(newAddedTodos).map((key: string) => {
+            const todo = newAddedTodos[key];
+            return renderTodo(
+                todo,
+                newAddedTodos.hasOwnProperty(todo.id) && !newAddedTodos[todo.id].error,
+                newAddedTodos.hasOwnProperty(todo.id) && newAddedTodos[todo.id].error
+            )
+        })
+    }
+
+    /**
+     * Render Todo
+     * 
+     * @description To render todo
+     *      
+    */
+    const renderTodo = (todo: TodoType, addingTodoLoading: boolean, addingTodoError: boolean) => {
+        return (
+            <Col key={todo.id} xs={12}>
+                <ShowTodo 
+                    setLastTodoElement={setLastTodoElement}
+                    todo={todo}
+                    addingTodoLoading={addingTodoLoading}
+                    addingTodoError={addingTodoError}
+                />
+            </Col>
+        );
+    }
+
+    /**
+     * Render Nav item
+     * 
+     * @description To render nav item
+     *      
+    */
+    const renderNavItem = () => {
+        return categories.map((category) => {
+            return (
+                <Nav.Item>
+                    <Nav.Link eventKey={category}>{category}</Nav.Link>
+                </Nav.Item>
+            )
+        })
+    }
+
+    /**
+     * Render Navigation
+     * 
+     * @description To render navigation
+     *      
+    */
+    const renderTodoCategory = () => {
+        return (
+            <Nav className="todo-nav" justify onSelect={onSelectTodoTab} variant="pills" defaultActiveKey="All">
+                {renderNavItem()}
+            </Nav>
+        )
+    }
+    
     /**
      * Main Return
      *      
     */
     return (
         <>
-            <div className="sticky-top py-4" id="top-menu">
-                <Form onSubmit={onSubmitAddTodo}>
-                    <Form.Control type="text" placeholder="Add Task"value={todo} onChange={handleAddTodoInputField} />
-                </Form>
+            <div className="sticky-top py-2" id="top-menu">
                 <Row>
                     <Col xs={12}>
-                       <h6 className="my-3"> Showing todo: <b>{todos.length}/{pagination.total}</b></h6>
+                        <Form onSubmit={onSubmitAddTodo}>
+                            <input
+                                type="text" 
+                                className="todo-input rounded shadow-sm"
+                                placeholder="Add todo..." 
+                                maxLength={256}
+                                value={todo} 
+                                onChange={handleAddTodoInputField} 
+                            />
+                        </Form>
+                    </Col>
+                    <Col xs={12}>
+                        <Row className="my-3">
+                            <Col sm={8}>
+                                <h6 className="my-3"> Showing todo: <b>{count.todos}/{count.total}</b></h6>
+                            </Col>
+                            <Col sm={4}>
+                                {
+                                    renderTodoCategory()
+                                }
+                            </Col>    
+                        </Row>  
                     </Col>
                 </Row>
-                <Nav className="my-4" justify onSelect={onSelectTodoTab} variant="pills" defaultActiveKey="todos">
-                    <Nav.Item>
-                        <Nav.Link eventKey="todos">All</Nav.Link>
-                    </Nav.Item>
-                    <Nav.Item>
-                        <Nav.Link eventKey="active">Active</Nav.Link>
-                    </Nav.Item>
-                    <Nav.Item>
-                        <Nav.Link eventKey="completed">Completed</Nav.Link>
-                    </Nav.Item>
-                </Nav>
-            </div>
-
-            <Table className="todo-table" responsive>
-                <tbody>
+                </div>
+                <Row>
+                    <Col xs={12}>
+                        <hr />
+                    </Col>
                     {
                         (loaded || todos.length)
-                        ? ((todos.length || newAddedTodos.length)
+                        ? ((todos.length || Object.keys(newAddedTodos).length)
                             ? <>
-                                {renderTodo(todos)}
-                                {renderTodo(newAddedTodos)}
+                                {renderAllTodos()}
+                                {renderTodoNewAddedTodos()}
                             </>
-                            : (!error && renderMessage(`No ${currentSelectedNav} found`))
+                            : 
+                            <Col xs={12}>
+                                {
+                                    !error && renderMessage(`No ${currentSelectedNav} found`)
+                                }
+                            </Col>
                         ): null
                     }
-                        {
-                            !loaded ? <tr><td><Loader /></td></tr> : (error && renderMessage(`Something went wrong`)) 
-                        }
-                </tbody>
-            </Table>
+                </Row>
+                <Col className="text-center">
+                    {
+                        !loaded ? <Loader /> : (error && renderMessage(`Something went wrong`)) 
+                    }
+                </Col>
         </>
     )
 }
