@@ -28,7 +28,7 @@ describe("App Testing", () => {
   });
 
   it("adding todo", () => {
-    const value = "abc";
+    const value = "Test Title";
     const inputField = wrapper.find("#add-todo-input");
     const form = wrapper.find("#add-todo-form").at(0);
     inputField.simulate('change', {target: {value}});
