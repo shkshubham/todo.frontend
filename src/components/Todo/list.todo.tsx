@@ -250,6 +250,7 @@ const ListTodo = () => {
         return (
             <Col className="todo-item" key={todo.id} xs={12}>
                 <ShowTodo 
+                    currentSelectedNav={currentSelectedNav}
                     setLastTodoElement={setLastTodoElement}
                     todo={todo}
                     addingTodoLoading={addingTodoLoading}

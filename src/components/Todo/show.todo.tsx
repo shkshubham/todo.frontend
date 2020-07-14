@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useMemo, memo, useEffect } from 'react';
 import { TodoType, APIStatusType, APIStatusUpdateType, UpdateTodoType } from '../../types';
 import { Col, Row, Button } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
@@ -10,9 +10,10 @@ interface ShowTodoPropsTypes {
     setLastTodoElement: any;
     addingTodoLoading: boolean;
     addingTodoError: boolean;
+    currentSelectedNav: string;
 }
 
-const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addingTodoLoading, addingTodoError}: ShowTodoPropsTypes) => {
+const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addingTodoLoading, addingTodoError, currentSelectedNav}: ShowTodoPropsTypes) => {
     const initialApiStatus = useMemo(() =>{
         return {
             loading: false,
@@ -20,7 +21,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
             done: false
         }
     }, [])
-    const { todos, pagination, service, setPagination, addTodo, setNewAddedTodos, setCount, setDeleteTodoCount } = TodoContext.useContainer()
+    const { todos, pagination, service, setPagination, addTodo, setNewAddedTodos, setCount, setDeleteTodoCount, setTodos } = TodoContext.useContainer()
     const [showToolbar, setShowToolbar] = useState(false);
     const [finalTitle, setFinalTitle] = useState(title)
     const [editBtnClicked, setEditBtnClicked] = useState(false)
@@ -135,7 +136,12 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
     const completeTodo = async(id: string, completed: boolean) => {
         setEventType("PATCH")
         alterTodo(id, {completed}, setCompleteStatus).then((response) => {
+            const foundTodo = todos.find((todo) => todo.id === id)
             setIsTodoCompleted(response.completed)
+            if(foundTodo) {
+                foundTodo.completed = response.completed
+                setTodos([...todos])
+            }
         })
     }
 
@@ -324,6 +330,12 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
      *
     */
 
+    const checkCurrentSelectedNav = () => {
+       return (currentSelectedNav === "Active" && !isTodoCompleted) || 
+            (currentSelectedNav === "Completed" && isTodoCompleted) ||
+            currentSelectedNav === "All"
+    }
+
     const additionalClass = () => {
         if(isError) {
             return "failed"
@@ -340,7 +352,9 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
     /**
      * Main Return
     */
-    return !deleteStatus.done ? (
+    return !deleteStatus.done ?
+        checkCurrentSelectedNav() ?
+        (
         <>
             <div 
                 ref={(el) => todos.length && todos[todos.length -1].id === id && todos.length >= pagination.limit && setLastTodoElement(el)}
@@ -355,7 +369,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
             </Row>
             </div>
         </>
-    ) : null
+    ) : null : null
 }
 
 export default memo(ShowTodo);
