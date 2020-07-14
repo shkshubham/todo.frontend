@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo, useEffect } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { TodoType, APIStatusType, APIStatusUpdateType, UpdateTodoType } from '../../types';
 import { Col, Row, Button } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
