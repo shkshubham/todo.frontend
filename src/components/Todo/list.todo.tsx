@@ -362,10 +362,9 @@ const ListTodo = () => {
                                     loaded &&  
                                     <>
                                         {renderTodoNewAddedTodos()}
-                                        {renderAllTodos()}
                                     </>
                                 }
-                               
+                                   {renderAllTodos()}
                             </>
                             : 
                             <Col xs={12}>
