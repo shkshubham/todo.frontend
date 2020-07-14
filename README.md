@@ -26,7 +26,8 @@ For Demo, please visit: https://todo-9d72a.web.app/
 - npm v5+
 
 ### Setup
-- env.sample
+1. `cp env.sample .env`
+2. Change  env variable`REACT_APP_API_URL` to you backend api. Default (`REACT_APP_API_URL=http://localhost:3030`).
 
 ## Available Scripts
 
