@@ -11,6 +11,9 @@ This todo web application provides the following features:
 - Can delete the todo
 - Can set todo to complete state
 - Server side pagination
+- Error Handling on delete, update & add todo
+- Easy navigation to filter out the todo(s)
+- Full Responsive Website (Mobile Friendly)
 
 ## Demo
 
