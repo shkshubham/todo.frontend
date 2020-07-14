@@ -25,6 +25,9 @@ For Demo, please visit: https://todo-9d72a.web.app/
 - node js v8+
 - npm v5+
 
+### Setup
+- env.sample
+
 ## Available Scripts
 
 In the project directory, you can run:
