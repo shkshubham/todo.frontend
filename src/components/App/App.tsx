@@ -8,7 +8,7 @@ function App() {
     <>
      <Navbar variant="dark" bg="dark">
         <Navbar.Brand>
-          Todo
+          Todo App
         </Navbar.Brand>
       </Navbar>
       <div className="container mt-4">

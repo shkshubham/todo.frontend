@@ -1,8 +1,9 @@
 import React, { useState, useMemo, memo } from 'react';
 import { TodoType, APIStatusType, APIStatusUpdateType, UpdateTodoType } from '../../types';
-import { Button, Form, Col, Row } from 'react-bootstrap';
+import { Col, Row, Button } from 'react-bootstrap';
 import TodoContext from '../../contexts/todo.context';
 import Loader from '../includes/Loader/loader';
+import InputForm from '../includes/Input/input';
 
 interface ShowTodoPropsTypes {
     todo: TodoType;
@@ -21,7 +22,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
     }, [])
     const { todos, pagination, service, setPagination, addTodo, setNewAddedTodos, setCount } = TodoContext.useContainer()
     const [showToolbar, setShowToolbar] = useState(false);
-    const [inputValue, setInputValue] = useState(title)
+    const [finalTitle, setFinalTitle] = useState(title)
     const [editBtnClicked, setEditBtnClicked] = useState(false)
     const [updateStatus, setUpdateStatus] = useState<APIStatusType>(initialApiStatus);
     const [completeStatus, setCompleteStatus] = useState<APIStatusType>(initialApiStatus);
@@ -39,12 +40,8 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
     }
 
     const onCancelBtnClicked = () => {
-        setInputValue(title)
+        setFinalTitle(title)
         toggleEditBtn()
-    }
-
-    const onInputChange = (e: any) => {
-        setInputValue(e.target.value)
     }
 
     /**
@@ -150,8 +147,9 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
      * @param e: Form submit event
      *
     */
-    const onSubmitTodoUpdateForm = (e: React.SyntheticEvent) => {
+    const onSubmitTodoUpdateForm = (e: React.SyntheticEvent, inputValue: string) => {
         e.preventDefault()
+        setFinalTitle(inputValue)
         alterTodo(id, {title: inputValue}, setUpdateStatus)
         toggleEditBtn();
     }
@@ -221,7 +219,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
         setUpdateStatus(initialApiStatus)
         if(typeof id === "number") {
             if(eventType === "PATCH") {
-                alterTodo(id, {title: inputValue, completed: isTodoCompleted }, setUpdateStatus)
+                alterTodo(id, {title: finalTitle, completed: isTodoCompleted }, setUpdateStatus)
             } else {
                 alterTodo(id, {}, setDeleteStatus, "DELETE")
             }
@@ -242,25 +240,21 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
     const renderEditTodo = () => {
         return (
             <Col xs={12}>
-                <Form onSubmit={onSubmitTodoUpdateForm}>
-                    <Row>
-                        <Col xs={10}>
-                            <input 
-                                maxLength={256}
-                                type="text" 
-                                value={inputValue}
-                                onChange={onInputChange}
-                                className="mb-2 todo-input edit-todo rounded border"
-                            />
-                        </Col>
-                        <Col sm={2}>
-                            <div className="py-2 d-flex justify-content-end">
-                                <Button className="mx-2" size="sm" variant="success" type="submit">Save</Button>
-                                <Button size="sm" variant="danger" onClick={onCancelBtnClicked}>Cancel</Button>
-                            </div>
-                        </Col>
-                    </Row>
-                </Form>
+                <InputForm 
+                        formId="edit-todo-form"
+                        onSubmitForm={onSubmitTodoUpdateForm}
+                        inputId="edit-todo-input"
+                        className="mb-2 todo-input edit-todo rounded border"
+                        inputValue={finalTitle}
+                        size="10"
+                    >
+                    <Col sm={2}>
+                        <div className="py-2 d-flex justify-content-end">
+                            <Button className="mx-2" size="sm" variant="success" type="submit">Save</Button>
+                            <Button size="sm" variant="danger" onClick={onCancelBtnClicked}>Cancel</Button>
+                        </div>
+                    </Col>
+                </InputForm>
             </Col>
         )
     }
@@ -282,17 +276,17 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
                      <div className="py-1">
                         {
                             !isTodoCompleted 
-                            ? inputValue 
-                            : <del className="text-muted">{inputValue}</del>
+                            ? finalTitle 
+                            : <del className="text-muted">{finalTitle}</del>
                         }
                      </div>
                 </div>
             </Col>
             <Col xs={2}>
-              {  
+                {  
                   !isError
                       ? (showToolbar && !isLoading) && 
-                      <div className={"d-flex justify-content-end visible"}>
+                      <div className="d-flex justify-content-end visible">
                           <button onClick={toggleEditBtn} className="btn btn-circle">
                               <i className="fas fa-pencil-alt"></i>
                           </button>
@@ -306,11 +300,13 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
                               <i className="fas fa-redo"></i>
                           </button>
                       </div>
-              }
-               {
+                }
+                {
                   (isLoading && !isError) && 
-                      <Loader />
-              }
+                     <div className="d-flex justify-content-end p-2">
+                        <Loader />
+                     </div>
+                }
           </Col>
           </>
         )
@@ -326,7 +322,6 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
      * @returns {boolean}
      *
     */
-    // const additionalClass = isError ? "failed" : isLoading ? "disabled text-muted" : isTodoCompleted ? "completed" : "incomplete";
 
     const additionalClass = () => {
         if(isError) {
