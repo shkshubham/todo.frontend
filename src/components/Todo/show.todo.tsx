@@ -273,7 +273,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
                     <button onClick={onCompleteBtnClicked} className="btn btn-circle complete-btn">
                         <i className={isTodoCompleted ? `completed-check far fa-check-square` : "far fa-square"}></i>
                     </button>
-                     <div className="py-1">
+                     <div className="py-2">
                         {
                             !isTodoCompleted 
                             ? finalTitle 

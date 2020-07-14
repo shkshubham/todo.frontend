@@ -14,8 +14,14 @@ interface InputFormPropsType {
 
 const InputForm = ({onSubmitForm, inputValue="", formId, inputId, className, children, placeholder="", size}: InputFormPropsType) => {
     const [value, setValue] = useState(inputValue)
+
+    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        setValue("")
+        onSubmitForm(e, value);
+    }
+
     return (
-        <Form id={formId} onSubmit={(e: React.FormEvent<HTMLFormElement>) => onSubmitForm(e, value)}>
+        <Form id={formId} onSubmit={(e: React.FormEvent<HTMLFormElement>) => onSubmit(e)}>
             <Row>
                 <Col xs={size}>
 

@@ -22,7 +22,6 @@ describe("App Testing", () => {
     equal(wrapper.find(".container").length, 1);
   });
 
-
   it('checking add todo input field', () => {
     equal(wrapper.find("#add-todo-input").length, 1);
   });

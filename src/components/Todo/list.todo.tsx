@@ -90,11 +90,12 @@ const ListTodo = () => {
     */
     useEffect(() => {
         todosAndPaginationCount.current.todos = todos.length;
-        if(todos.length) {
             setCount((previousState) => {
-                return {...previousState, todos: todos.length + checkCurrentNav()}
+                if(todos.length !== previousState.todos) {
+                    return {...previousState, todos: todos.length + checkCurrentNav()}
+                }
+                return previousState;
             })
-        }
 
     }, [todos, setCount, checkCurrentNav])
     /**
@@ -105,12 +106,12 @@ const ListTodo = () => {
     */
     useEffect(() => {
         todosAndPaginationCount.current.pagination = pagination;
-        if(pagination.total) {
-            setCount((previousState) => {
+        setCount((previousState) => {
+            if(pagination.total !== previousState.total) {
                 return {...previousState, total: pagination.total + checkCurrentNav()}
-            })
-        }
-
+            }
+            return previousState;
+        })
     }, [pagination, setCount, checkCurrentNav])
 
     /**
@@ -327,7 +328,12 @@ const ListTodo = () => {
                     <Col xs={12}>
                         <Row className="my-3">
                             <Col sm={8}>
-                                <h6 className="my-3"> Showing todo: <b>{count.todos}/{count.total}</b></h6>
+                                <h6 className="m-3 "> Showing todo: 
+                                { loaded
+                                   ? <b>{count.todos}/{count.total}</b>
+                                   : <Loader />
+                                }
+                                    </h6>
                             </Col>
                             <Col sm={4}>
                                 {
@@ -354,9 +360,14 @@ const ListTodo = () => {
                                     </Col>
                                     </>
                                 }
+                                {
+                                    loaded &&  
+                                    <>
+                                        {renderTodoNewAddedTodos()}
+                                        {renderAllTodos()}
+                                    </>
+                                }
                                
-                                {renderTodoNewAddedTodos()}
-                                {renderAllTodos()}
                             </>
                             : 
                             <Col xs={12}>
