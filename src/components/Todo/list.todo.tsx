@@ -21,7 +21,9 @@ const ListTodo = () => {
         setIsLoadingTodos,
         count,
         setCount,
-        chuckNorrisJokes
+        chuckNorrisJokes,
+        deletedTodoCount,
+        setDeleteTodoCount
     } = TodoContext.useContainer();
     const [currentSelectedNav, setCurrentSelectedNav] = useState("All");
     const categories = useMemo(() => ["All", "Active", "Completed"], [])
@@ -91,10 +93,10 @@ const ListTodo = () => {
     useEffect(() => {
         todosAndPaginationCount.current.todos = todos.length;
             setCount((previousState) => {
-                return {...previousState, todos: todos.length + checkCurrentNav()}
+                return {...previousState, todos: (todos.length + checkCurrentNav()) - deletedTodoCount}
             })
 
-    }, [todos, setCount, checkCurrentNav])
+    }, [todos, setCount, checkCurrentNav, deletedTodoCount])
     /**
      * Use effect Hook
      *
@@ -180,6 +182,7 @@ const ListTodo = () => {
     */
     const onSelectTodoTab = (category: string) => {
         setCurrentSelectedNav(category)
+        setDeleteTodoCount(0)
         const query = {}
         setQuery(query, category)
         setIsLoadingTodos({loaded: false, error: false})

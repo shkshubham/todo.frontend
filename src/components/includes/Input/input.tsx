@@ -12,7 +12,16 @@ interface InputFormPropsType {
     size: any;
 }
 
-const InputForm = ({onSubmitForm, inputValue="", formId, inputId, className, children, placeholder="", size}: InputFormPropsType) => {
+const InputForm = ({
+        onSubmitForm,
+        inputValue="",
+        formId,
+        inputId,
+        className,
+        children,
+        placeholder="",
+        size
+    }: InputFormPropsType) => {
     const [value, setValue] = useState(inputValue)
 
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {

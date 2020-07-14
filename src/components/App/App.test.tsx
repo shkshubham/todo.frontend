@@ -6,6 +6,7 @@ import { equal } from 'assert';
 
 describe("App Testing", () => {
   let wrapper: ReactWrapper<any, Readonly<{}>, React.Component<{}, {}, any>>
+
   const mockIntersectionObserver: any = class {
     constructor() {}
     observe() {}
@@ -35,4 +36,5 @@ describe("App Testing", () => {
     const todoNode = wrapper.find(".todo-item").last()
     equal(todoNode.text(), value)
   })
+
 })

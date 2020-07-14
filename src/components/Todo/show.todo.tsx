@@ -20,7 +20,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
             done: false
         }
     }, [])
-    const { todos, pagination, service, setPagination, addTodo, setNewAddedTodos, setCount } = TodoContext.useContainer()
+    const { todos, pagination, service, setPagination, addTodo, setNewAddedTodos, setCount, setDeleteTodoCount } = TodoContext.useContainer()
     const [showToolbar, setShowToolbar] = useState(false);
     const [finalTitle, setFinalTitle] = useState(title)
     const [editBtnClicked, setEditBtnClicked] = useState(false)
@@ -196,6 +196,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
                 setCount((previousState => {
                     return {...previousState, total: previousState.total - 1, todos: previousState.todos - 1}
                 }))
+                setDeleteTodoCount(previousState => previousState + 1)
                 setPagination(previousPagination=> {
                     return {
                         ...previousPagination,

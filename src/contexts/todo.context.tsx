@@ -11,6 +11,7 @@ const useTodoContext = () => {
     const [newAddedTodos, setNewAddedTodos] = useState<UpdateAndDeleteTodoType>({})
     const [createdTodo, setCreatedTodo] = useState<any>({})
     const [isLoadingTodos, setIsLoadingTodos] = useState({loaded: false, error: false})
+    const [deletedTodoCount, setDeleteTodoCount] = useState(0);
     const [count, setCount] = useState({
         total: pagination.total,
         todos: todos.length
@@ -100,7 +101,7 @@ const useTodoContext = () => {
             newAddedTodos[createdTodo.ref].error = true
             setCreatedTodo({...newAddedTodos})
         }
-    }, [createdTodo, setCreatedTodo, setNewAddedTodos, todos, newAddedTodos])
+    }, [createdTodo, setCreatedTodo, setNewAddedTodos, todos, newAddedTodos, setCount])
 
     /**
      * Add Todo
@@ -111,6 +112,9 @@ const useTodoContext = () => {
      * 
     */
     const addTodo = async (todo: AddTodoType, ref: string) => {
+        setCount(previousState => {
+            return {...previousState, todos: previousState.todos + 1}
+        })
         setNewAddedTodos(previousAddedTodos => {
             return {...previousAddedTodos, [ref]: {...todo, id: ref}}
         });
@@ -129,17 +133,19 @@ const useTodoContext = () => {
     return { 
         todos,
         count,
-        setCount,
         chuckNorrisJokes,
         newAddedTodos,
-        setNewAddedTodos,
-        addTodo,
         pagination,
-        setPagination,
         service,
-        setTodos,
         isLoadingTodos,
-        setIsLoadingTodos
+        deletedTodoCount,
+        addTodo,
+        setCount,
+        setNewAddedTodos,
+        setPagination,
+        setTodos,
+        setIsLoadingTodos,
+        setDeleteTodoCount
     }
 }
 
