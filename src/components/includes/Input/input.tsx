@@ -23,7 +23,7 @@ const InputForm = ({onSubmitForm, inputValue="", formId, inputId, className, chi
     return (
         <Form id={formId} onSubmit={(e: React.FormEvent<HTMLFormElement>) => onSubmit(e)}>
             <Row>
-                <Col xs={size}>
+                <Col xs={12} sm={size}>
 
                         <input
                             type="text" 
