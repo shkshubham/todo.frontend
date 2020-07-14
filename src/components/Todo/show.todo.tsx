@@ -194,7 +194,7 @@ const ShowTodo = ({todo: {title, id, completed, joke}, setLastTodoElement, addin
         if (response === true) {
             alterTodo(id, {}, setDeleteStatus, "DELETE").then(() => {
                 setCount((previousState => {
-                    return {...previousState, total: previousState.total - 1}
+                    return {...previousState, total: previousState.total - 1, todos: previousState.todos - 1}
                 }))
                 setPagination(previousPagination=> {
                     return {

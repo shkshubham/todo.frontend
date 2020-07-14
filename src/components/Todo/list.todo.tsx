@@ -91,10 +91,7 @@ const ListTodo = () => {
     useEffect(() => {
         todosAndPaginationCount.current.todos = todos.length;
             setCount((previousState) => {
-                if(todos.length !== previousState.todos) {
-                    return {...previousState, todos: todos.length + checkCurrentNav()}
-                }
-                return previousState;
+                return {...previousState, todos: todos.length + checkCurrentNav()}
             })
 
     }, [todos, setCount, checkCurrentNav])
@@ -107,10 +104,7 @@ const ListTodo = () => {
     useEffect(() => {
         todosAndPaginationCount.current.pagination = pagination;
         setCount((previousState) => {
-            if(pagination.total !== previousState.total) {
-                return {...previousState, total: pagination.total + checkCurrentNav()}
-            }
-            return previousState;
+            return {...previousState, total: pagination.total + checkCurrentNav()}
         })
     }, [pagination, setCount, checkCurrentNav])
 
